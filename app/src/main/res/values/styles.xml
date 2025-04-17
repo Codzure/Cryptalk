@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="ChatInputStyle" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <!-- Stroke and Hint Colors -->
+        <item name="boxStrokeColor">@color/message_input_colors</item>
+        <item name="hintTextColor">@color/purple_light</item>
+
+        <!-- Rounded Corners -->
+        <item name="shapeAppearanceOverlay">@style/ChatInputShape</item>
+
+        <!-- Other Customizations -->
+        <item name="boxBackgroundMode">outline</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+    </style>
+
+    <style name="ChatInputShape">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">24dp</item>
+    </style>
+
+    <style name="GenZ.HintText" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:textColor">@color/switch_thumb</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- Toolbar Title -->
+    <style name="ToolbarItemTextAppearance">
+        <item name="android:textSize">16dp</item>
+        <item name="android:textColor">@color/brand_main_text</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?attr/textAppearanceHeadline6</item>
+    </style>
+</resources>

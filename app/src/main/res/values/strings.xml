@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Cryptalk</string>
+    <string name="message">Enter message ...</string>
+    <string name="_4_digit_pin">4-digit PIN</string>
+    <string name="encrypt_this_message">Encrypt this message?</string>
+    <string name="settings">Settings</string>
+</resources>

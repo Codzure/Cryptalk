@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="text_light">#FFFFFF</color>
+    <color name="switch_track">#424242</color>
+    <color name="switch_thumb">#9C27B0</color>
+    <color name="purple_light">#BA68C8</color>
+    <color name="background_dark">#121212</color>
+    <color name="background_light">#F5F5F5</color>
+
+    <color name="error_red">#F44336</color>
+    <color name="error_container">#FFEBEE</color>
+    <color name="brand_main_text">#221f1f</color>
+
+</resources>

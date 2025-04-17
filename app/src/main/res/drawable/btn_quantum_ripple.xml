@@ -1,0 +1,5 @@
+<!-- res/drawable/btn_quantum_ripple.xml -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#E1BEE7">  <!-- Light purple ripple -->
+    <item android:drawable="@drawable/btn_quantum_gradient" />
+</ripple>
