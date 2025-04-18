@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.view.animation.AnimationUtils
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.TextView
@@ -23,6 +24,7 @@ import androidx.transition.TransitionManager
 import com.codzure.cryptalk.R
 import com.codzure.cryptalk.databinding.FragmentChatBinding
 import com.codzure.cryptalk.dialogs.PinInputDialogFragment
+import com.codzure.cryptalk.dialogs.PinMode
 import com.codzure.cryptalk.extensions.AESAlgorithm.AES
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.shape.ShapeAppearanceModel
@@ -73,7 +75,7 @@ class ChatFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = MessageAdapter(messages) { message, itemView ->
             if (message.pinHash != null) {
-                showPinDialog(false) { inputPin ->
+                showPinDialog(PinMode.DECRYPT) { inputPin ->
                     if (hashPin(inputPin) == message.pinHash) {
                         try {
                             val decrypted = AES.decrypt(message.encodedText, inputPin)
@@ -88,6 +90,10 @@ class ChatFragment : Fragment() {
                 }
             }
         }
+
+        val controller = AnimationUtils.loadLayoutAnimation(context, R.anim.layout_animation_fall_down)
+        binding.messageList.layoutAnimation = controller
+        binding.messageList.scheduleLayoutAnimation()
 
         binding.messageList.apply {
             layoutManager = LinearLayoutManager(requireContext()).apply {
@@ -187,7 +193,7 @@ class ChatFragment : Fragment() {
             .setTitle("Encrypt this message?")
             .setMessage("Would you like to encrypt this message with a 4-digit PIN?")
             .setPositiveButton("Encrypt") { _, _ ->
-                showPinDialog(true) { pin ->
+                showPinDialog(PinMode.ENCRYPT) { pin ->
                     sendMessage(messageText, pin)
                 }
             }
@@ -197,7 +203,7 @@ class ChatFragment : Fragment() {
             .show()
     }
 
-    private fun sendMessage(messageText: String, pin: String?, isEncrypted: Boolean = false) {
+    private fun sendMessage(messageText: String, pin: String?) {
         try {
             val (finalMessage, pinHash) = if (pin != null) {
                 AES.encrypt(messageText, pin) to hashPin(pin)
@@ -207,7 +213,7 @@ class ChatFragment : Fragment() {
 
             val newMessage = Message(
                 id = System.currentTimeMillis().toString(),
-                sender = "me",
+                sender = "Leonard Mutugi",
                 encodedText = finalMessage,
                 senderNumber = "1234567890",
                 pinHash = pinHash,
@@ -219,13 +225,36 @@ class ChatFragment : Fragment() {
             adapter.notifyItemInserted(messages.size - 1)
             binding.messageList.smoothScrollToPosition(messages.size - 1)
             binding.messageInput.text?.clear()
+
+            // Simulate reply after 1.5 seconds
+            binding.messageList.postDelayed({
+                simulateReceiverReply()
+            }, 1500)
+
         } catch (e: Exception) {
             showErrorSnackbar("Encryption failed: ${e.message}")
         }
     }
 
-    private fun showPinDialog(isForEncryption: Boolean, onPinEntered: (String) -> Unit) {
-        PinInputDialogFragment(onPinEntered, isForEncryption).show(parentFragmentManager, "PinDialog")
+    private fun simulateReceiverReply() {
+        val replyMessage = Message(
+            id = System.currentTimeMillis().toString(),
+            sender = "Alice Wonderland",
+            encodedText = "Got your message!",
+            senderNumber = "9876543210",
+            pinHash = null,
+            isEncrypted = false,
+            timestamp = System.currentTimeMillis()
+        )
+
+        messages.add(replyMessage)
+        adapter.notifyItemInserted(messages.size - 1)
+        binding.messageList.smoothScrollToPosition(messages.size - 1)
+    }
+
+    private fun showPinDialog(mode: PinMode, onPinEntered: (String) -> Unit) {
+        PinInputDialogFragment.newInstance(mode, onPinEntered)
+            .show(parentFragmentManager, "PinDialog")
     }
 
     private fun showDecryptedDialog(text: String) {

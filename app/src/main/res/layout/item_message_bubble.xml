@@ -1,71 +1,92 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
+<LinearLayout android:id="@+id/messageRoot"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="8dp">
+    android:padding="4dp"
+    android:gravity="start"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Circle Initials -->
-    <TextView
-        android:id="@+id/senderInitials"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:gravity="center"
-        android:text="JD"
-        android:textColor="@android:color/white"
-        android:textStyle="bold"
-        android:backgroundTint="#6200EE"
-        android:background="@drawable/bg_message_bubble"
-        android:textSize="14sp"
-        android:layout_marginEnd="8dp" />
-
-    <LinearLayout
-        android:id="@+id/bubbleContainer"
-        android:layout_width="0dp"
-        android:layout_weight="1"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="12dp"
-        android:layout_marginBottom="4dp"
-        android:background="@drawable/bg_message_bubble"
-        android:elevation="2dp">
-
-        <!-- Sender Chip -->
-        <com.google.android.material.chip.Chip
-            android:id="@+id/senderInfo"
-            style="@style/Widget.Material3.Chip.Assist"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="John Doe • +1234567890"
-            app:chipStrokeWidth="0dp"
-            android:layout_marginBottom="4dp"
-            app:chipIcon="@drawable/ic_action_settings"
-            app:iconStartPadding="4dp"
-            app:iconEndPadding="4dp"
-            app:iconSize="16dp" />
-
-        <!-- Message Text -->
+        <!-- Avatar -->
         <TextView
-            android:id="@+id/messageText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Encrypted or plain message"
-            android:textColor="@android:color/black"
-            android:textSize="16sp"
-            android:lineSpacingExtra="4dp"
-            android:maxWidth="280dp"
-            android:autoLink="all" />
+            android:id="@+id/senderInitials"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:gravity="center"
+            android:text="JD"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:backgroundTint="?attr/colorPrimary"
+            android:layout_marginEnd="8dp" />
 
-        <!-- Timestamp -->
-        <TextView
-            android:id="@+id/messageTime"
+        <!-- Bubble -->
+        <LinearLayout
+            android:id="@+id/bubbleContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="12:45 PM"
-            android:textSize="10sp"
-            android:textColor="@android:color/darker_gray"
-            android:layout_marginTop="6dp" />
+            android:orientation="vertical"
+            android:background="@drawable/bg_message_bubble"
+            android:paddingVertical="8dp"
+            android:paddingHorizontal="12dp">
+
+            <!-- Header Row -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:id="@+id/senderInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="John Doe"
+                    android:textAppearance="?attr/textAppearanceLabelMedium"
+                    android:textColor="?attr/colorPrimary"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="4dp"
+                    android:contentDescription="Verified" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:id="@+id/messageTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="12:45"
+                    android:textAppearance="?attr/textAppearanceLabelSmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
+
+            <!-- Message -->
+            <TextView
+                android:id="@+id/messageText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Your message here"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?android:attr/textColorPrimary"
+                android:lineSpacingMultiplier="1.1"
+                android:maxLines="4"
+                android:ellipsize="end" />
+
+            <!-- Status -->
+            <ImageView
+                android:id="@+id/deliveryStatus"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginTop="2dp"
+                android:layout_gravity="end"
+                android:contentDescription="Delivered"
+                android:visibility="gone" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
