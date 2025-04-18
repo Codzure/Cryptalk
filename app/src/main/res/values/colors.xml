@@ -10,5 +10,7 @@
     <color name="error_red">#F44336</color>
     <color name="error_container">#FFEBEE</color>
     <color name="brand_main_text">#221f1f</color>
+    <color name="bubble_self_background">#DCF8C6</color>
+    <color name="bubble_self_background_2">#E1F5FE</color>
 
 </resources>

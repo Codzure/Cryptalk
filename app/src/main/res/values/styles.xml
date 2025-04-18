@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <style name="ChatInputStyle" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:fitsSystemWindows">false</item>
         <!-- Stroke and Hint Colors -->
         <item name="boxStrokeColor">@color/message_input_colors</item>
         <item name="hintTextColor">@color/purple_light</item>
@@ -33,5 +36,10 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textAppearance">?attr/textAppearanceHeadline6</item>
+    </style>
+
+    <style name="DialogSlideAnim" parent="Theme.Material3.DayNight.Dialog">
+        <item name="android:windowEnterAnimation">@anim/slide_in_bottom</item>
+        <item name="android:windowExitAnimation">@anim/slide_out_bottom</item>
     </style>
 </resources>

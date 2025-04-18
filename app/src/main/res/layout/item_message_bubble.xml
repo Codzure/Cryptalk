@@ -1,19 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp">
 
+    <!-- Circle Initials -->
     <TextView
-        android:id="@+id/messageText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@drawable/message_bubble"
-        android:padding="12dp"
-        android:textColor="@android:color/black"
-        android:textSize="16sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:id="@+id/senderInitials"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="JD"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:backgroundTint="#6200EE"
+        android:background="@drawable/bg_message_bubble"
+        android:textSize="14sp"
+        android:layout_marginEnd="8dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:id="@+id/bubbleContainer"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/bg_message_bubble"
+        android:elevation="2dp">
+
+        <!-- Sender Chip -->
+        <com.google.android.material.chip.Chip
+            android:id="@+id/senderInfo"
+            style="@style/Widget.Material3.Chip.Assist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="John Doe • +1234567890"
+            app:chipStrokeWidth="0dp"
+            android:layout_marginBottom="4dp"
+            app:chipIcon="@drawable/ic_action_settings"
+            app:iconStartPadding="4dp"
+            app:iconEndPadding="4dp"
+            app:iconSize="16dp" />
+
+        <!-- Message Text -->
+        <TextView
+            android:id="@+id/messageText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Encrypted or plain message"
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
+            android:lineSpacingExtra="4dp"
+            android:maxWidth="280dp"
+            android:autoLink="all" />
+
+        <!-- Timestamp -->
+        <TextView
+            android:id="@+id/messageTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="12:45 PM"
+            android:textSize="10sp"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginTop="6dp" />
+    </LinearLayout>
+</LinearLayout>

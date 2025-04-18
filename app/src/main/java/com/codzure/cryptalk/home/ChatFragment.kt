@@ -1,24 +1,34 @@
 package com.codzure.cryptalk.home
 
 import android.app.AlertDialog
+import android.graphics.Color
+import android.graphics.Rect
 import android.os.Bundle
 import android.text.Editable
-import android.text.InputType
 import android.text.TextWatcher
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.MarginLayoutParams
+import android.view.ViewTreeObserver
 import android.view.inputmethod.EditorInfo
-import android.widget.EditText
-import androidx.core.view.updateLayoutParams
+import android.widget.Button
+import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.transition.TransitionManager
 import com.codzure.cryptalk.R
 import com.codzure.cryptalk.databinding.FragmentChatBinding
+import com.codzure.cryptalk.dialogs.PinInputDialogFragment
 import com.codzure.cryptalk.extensions.AESAlgorithm.AES
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.transition.MaterialFadeThrough
+import com.google.android.material.transition.MaterialContainerTransform
+import com.google.android.material.transition.MaterialSharedAxis
 
 class ChatFragment : Fragment() {
 
@@ -26,11 +36,14 @@ class ChatFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: MessageAdapter
     private val messages = mutableListOf<Message>()
+    private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enterTransition = MaterialFadeThrough()
-        exitTransition = MaterialFadeThrough()
+        val enterTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ true)
+        enterTransition.duration = 300
+        this.enterTransition = enterTransition
+        this.exitTransition = enterTransition
     }
 
     override fun onCreateView(
@@ -46,15 +59,25 @@ class ChatFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         setupInputField()
+        setupKeyboardVisibilityListener()
+
+        // Handle window insets for status bar
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
+            Log.d("ChatFragment", "Status bar top: ${systemBars.top}")
+            insets
+        }
     }
 
     private fun setupRecyclerView() {
-        adapter = MessageAdapter(messages) { message ->
+        adapter = MessageAdapter(messages) { message, itemView ->
             if (message.pinHash != null) {
-                showPinDialog { inputPin ->
+                showPinDialog(false) { inputPin ->
                     if (hashPin(inputPin) == message.pinHash) {
                         try {
                             val decrypted = AES.decrypt(message.encodedText, inputPin)
+                            animateDecryption(itemView)
                             showDecryptedDialog(decrypted)
                         } catch (e: Exception) {
                             showErrorSnackbar("Decryption failed. Please try again.")
@@ -63,19 +86,21 @@ class ChatFragment : Fragment() {
                         showErrorSnackbar("Incorrect PIN. Please try again.")
                     }
                 }
-            } else {
-                // If the message is not encrypted, just show it directly
-                //showDecryptedDialog(message.encodedText)
             }
         }
 
         binding.messageList.apply {
             layoutManager = LinearLayoutManager(requireContext()).apply {
                 stackFromEnd = true
+                reverseLayout = false
             }
             adapter = this@ChatFragment.adapter
             setHasFixedSize(true)
         }
+
+        binding.messageList.addItemDecoration(
+            DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
+        )
     }
 
     private fun setupInputField() {
@@ -106,18 +131,63 @@ class ChatFragment : Fragment() {
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             })
+
+            // Scroll RecyclerView if there are items
+            messageInput.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus && adapter.itemCount > 0) {
+                    messageList.post {
+                        messageList.smoothScrollToPosition(adapter.itemCount - 1)
+                        Log.d(
+                            "ChatFragment",
+                            "Scrolled RecyclerView to position: ${adapter.itemCount - 1}"
+                        )
+                    }
+                }
+            }
         }
+    }
+
+    private fun setupKeyboardVisibilityListener() {
+        val rootView = binding.root
+        globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
+            val rect = Rect()
+            rootView.getWindowVisibleDisplayFrame(rect)
+            val screenHeight = rootView.height
+            val keypadHeight = screenHeight - rect.bottom
+
+            if (keypadHeight > screenHeight * 0.15) {
+                // Keyboard is visible, try scrolling RecyclerView
+                binding.messageList.post {
+                    val inputRect = Rect()
+                    binding.container.getGlobalVisibleRect(inputRect)
+                    val scrollY = inputRect.bottom - rect.bottom
+                    if (scrollY > 0) {
+                        binding.messageList.scrollBy(0, scrollY)
+                    }
+                    // Fallback: Translate MaterialCardView up
+                    if (inputRect.bottom > rect.bottom) {
+                        val translationY = (rect.bottom - inputRect.bottom).toFloat()
+                        binding.inputWrapper.translationY = translationY
+                    }
+                }
+            } else {
+                // Keyboard is hidden, reset scroll and translation
+                binding.messageList.scrollTo(0, 0)
+                binding.inputWrapper.translationY = 0f
+            }
+        }
+        rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
     }
 
     private fun promptForEncryption() {
         val messageText = binding.messageInput.text.toString().trim()
         if (messageText.isEmpty()) return
 
-        AlertDialog.Builder(requireContext())
+        MaterialAlertDialogBuilder(requireContext(), R.style.DialogSlideAnim)
             .setTitle("Encrypt this message?")
             .setMessage("Would you like to encrypt this message with a 4-digit PIN?")
             .setPositiveButton("Encrypt") { _, _ ->
-                askForPin { pin ->
+                showPinDialog(true) { pin ->
                     sendMessage(messageText, pin)
                 }
             }
@@ -127,25 +197,7 @@ class ChatFragment : Fragment() {
             .show()
     }
 
-    private fun askForPin(onPinEntered: (String) -> Unit) {
-        val input = EditText(requireContext()).apply {
-            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-            hint = "4-digit PIN"
-        }
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Enter PIN")
-            .setView(input)
-            .setPositiveButton("Encrypt") { _, _ ->
-                val pin = input.text.toString()
-                if (pin.length == 4) onPinEntered(pin)
-                else showErrorSnackbar("PIN must be 4 digits")
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun sendMessage(messageText: String, pin: String?) {
+    private fun sendMessage(messageText: String, pin: String?, isEncrypted: Boolean = false) {
         try {
             val (finalMessage, pinHash) = if (pin != null) {
                 AES.encrypt(messageText, pin) to hashPin(pin)
@@ -155,8 +207,9 @@ class ChatFragment : Fragment() {
 
             val newMessage = Message(
                 id = System.currentTimeMillis().toString(),
-                sender = "me", // or however you're identifying the sender
+                sender = "me",
                 encodedText = finalMessage,
+                senderNumber = "1234567890",
                 pinHash = pinHash,
                 isEncrypted = pin != null,
                 timestamp = System.currentTimeMillis()
@@ -165,38 +218,39 @@ class ChatFragment : Fragment() {
             messages.add(newMessage)
             adapter.notifyItemInserted(messages.size - 1)
             binding.messageList.smoothScrollToPosition(messages.size - 1)
-
             binding.messageInput.text?.clear()
-
         } catch (e: Exception) {
             showErrorSnackbar("Encryption failed: ${e.message}")
         }
     }
 
-    private fun showDecryptedDialog(text: String) {
-        AlertDialog.Builder(requireContext())
-            .setTitle("✨ Secret Message")
-            .setMessage(text)
-            .setPositiveButton("Got it!", null)
-            .show()
+    private fun showPinDialog(isForEncryption: Boolean, onPinEntered: (String) -> Unit) {
+        PinInputDialogFragment(onPinEntered, isForEncryption).show(parentFragmentManager, "PinDialog")
     }
 
-    private fun showPinDialog(onPinEntered: (String) -> Unit) {
-        val input = EditText(requireContext()).apply {
-            inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-            hint = "Enter 4-digit PIN"
+    private fun showDecryptedDialog(text: String) {
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_decrypted_message, null)
+
+        val dialog = AlertDialog.Builder(requireContext(), R.style.DialogSlideAnim)
+            .setView(dialogView)
+            .create()
+
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        dialog.setCanceledOnTouchOutside(true)
+
+        dialogView.findViewById<TextView>(R.id.message).text = text
+        dialogView.findViewById<Button>(R.id.closeButton).setOnClickListener {
+            dialog.dismiss()
         }
 
-        AlertDialog.Builder(requireContext())
-            .setTitle("🔒 Encrypted Message")
-            .setView(input)
-            .setPositiveButton("Decrypt") { _, _ ->
-                val pin = input.text.toString()
-                if (pin.length == 4) onPinEntered(pin)
-                else showErrorSnackbar("PIN must be 4 digits")
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+        dialog.setOnShowListener {
+            val root = dialogView.parent as View
+            root.alpha = 0f
+            root.animate().alpha(1f).setDuration(300).start()
+        }
+
+        dialog.show()
     }
 
     private fun showErrorSnackbar(message: String) {
@@ -210,115 +264,25 @@ class ChatFragment : Fragment() {
         return (pin.hashCode() xor 0x5f3759df).toString()
     }
 
+    private fun animateDecryption(view: View) {
+        val transition = MaterialContainerTransform().apply {
+            startView = view
+            endView = view
+            duration = 500
+            scrimColor = Color.TRANSPARENT
+            startShapeAppearanceModel = ShapeAppearanceModel().withCornerSize(0f)
+            endShapeAppearanceModel = ShapeAppearanceModel().withCornerSize(32f)
+        }
+
+        TransitionManager.beginDelayedTransition(view.parent as ViewGroup, transition)
+        view.setBackgroundColor(Color.WHITE)
+    }
+
     override fun onDestroyView() {
+        globalLayoutListener?.let {
+            binding.root.viewTreeObserver.removeOnGlobalLayoutListener(it)
+        }
         super.onDestroyView()
         _binding = null
     }
 }
-
-
-/*val adapter = MessageAdapter(messages) { message ->
-    if (message.pinHash != null) {
-        showPinDialog { inputPin ->
-            if (hashPin(inputPin) == message.pinHash) {
-                val decrypted = AES.decrypt(message.encodedText, inputPin)
-                showDecryptedDialog(decrypted)
-            } else {
-                Toast.makeText(this, "Incorrect PIN", Toast.LENGTH_SHORT).show()
-            }
-        }
-    } else {
-        showDecryptedDialog(message.encodedText)
-    }
-}
-
-messageList.adapter = adapter
-messageList.layoutManager = LinearLayoutManager(requireContext())*/
-
-
-/*  // 🔓 3. Show PIN Dialog + Decrypt Message
-  fun showPinDialog(onPinEntered: (String) -> Unit) {
-      val input = EditText(requireContext()).apply {
-          inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
-          hint = "Enter 4-digit PIN"
-      }
-
-      AlertDialog.Builder(requireContext())
-          .setTitle("Decrypt Message")
-          .setView(input)
-          .setPositiveButton("Decrypt") { _, _ ->
-              val pin = input.text.toString()
-              if (pin.length == 4) onPinEntered(pin)
-          }
-          .setNegativeButton("Cancel", null)
-          .show()
-  }
-
-  fun showDecryptedDialog(text: String) {
-      AlertDialog.Builder(requireContext())
-          .setTitle("Decrypted Message")
-          .setMessage(text)
-          .setPositiveButton("OK", null)
-          .show()
-  }*/
-
-
-//🧠 2. Kotlin Logic: Sending Messages ~ Encrypting
-
-//encryptSwitch.setOnCheckedChangeListener { _, isChecked ->
-//    pinInput.visibility = if (isChecked) View.VISIBLE else View.GONE
-//}
-//
-//sendButton.setOnClickListener {
-//    val message = messageInput.text.toString()
-//    val encrypt = encryptSwitch.isChecked
-//    val pin = pinInput.text.toString()
-//
-//    val finalMessage = if (encrypt && pin.length == 4) {
-//        AES.encrypt(message, pin)
-//    } else {
-//        message
-//    }
-//
-//    val pinHash = if (encrypt && pin.length == 4) {
-//        hashPin(pin)
-//    } else {
-//        null
-//    }
-//
-//    // Send to Supabase or your backend
-//    sendMessageToServer(finalMessage, pinHash)
-//}
-
-// 📩 3. Reading Messages ~ Decrypting
-
-//fun onMessageClicked(message: Message) {
-//    if (message.pinHash != null) {
-//        showPinDialog { inputPin ->
-//            if (hashPin(inputPin) == message.pinHash) {
-//                val decrypted = AES.decrypt(message.encodedText, inputPin)
-//                showDecryptedDialog(decrypted)
-//            } else {
-//                Toast.makeText(context, "Incorrect PIN", Toast.LENGTH_SHORT).show()
-//            }
-//        }
-//    } else {
-//        showDecryptedDialog(message.encodedText) // plain text
-//    }
-//}
-
-
-/* To toggle PIN visibility smoothly:
-encryptSwitch.setOnCheckedChangeListener { _, isChecked ->
-    TransitionManager.beginDelayedTransition(chatScreen)  // Animate layout changes
-    pinInput.visibility = if (isChecked) View.VISIBLE else View.GONE
-}*/
-
-
-//// In your Activity to handle keyboard send button
-//messageInput.setOnEditorActionListener { _, actionId, _ ->
-//    if (actionId == EditorInfo.IME_ACTION_SEND) {
-//        sendMessage()
-//        true
-//    } else false
-//}
