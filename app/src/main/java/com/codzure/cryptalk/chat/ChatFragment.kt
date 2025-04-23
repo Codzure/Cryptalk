@@ -18,6 +18,7 @@ import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -73,6 +74,10 @@ class ChatFragment : Fragment() {
             v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
             Log.d("ChatFragment", "Status bar top: ${systemBars.top}")
             insets
+        }
+
+        binding.toolbar.setNavigationOnClickListener {
+            findNavController().navigateUp()
         }
     }
 
