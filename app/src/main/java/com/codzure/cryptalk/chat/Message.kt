@@ -6,6 +6,6 @@ data class Message(
     val senderNumber: String,
     val encodedText: String,
     val pinHash: String?,
-    val isEncrypted: Boolean,
+    val isEncrypted: Boolean, // remove this. If hash is nil, then message is not encrypted, else encrypted.
     val timestamp: Long = System.currentTimeMillis()
 )

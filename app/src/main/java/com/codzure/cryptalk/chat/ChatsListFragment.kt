@@ -83,7 +83,8 @@ class ChatsListFragment : Fragment() {
                 senderNumber = "101",
                 encodedText = "yooo what's the vibe tonight? 🎉",
                 pinHash = null,
-                isEncrypted = false
+                isEncrypted = false,
+
             ),
             Message(
                 id = UUID.randomUUID().toString(),

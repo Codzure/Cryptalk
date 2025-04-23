@@ -46,6 +46,8 @@ supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
 supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt" }
 supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt" }
 supabase-functions = { module = "io.github.jan-tennert.supabase:functions-kt" }
+supabase-core = { module = "io.github.jan-tennert.supabase:core-kt", version.ref = "supabase" }
+
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }

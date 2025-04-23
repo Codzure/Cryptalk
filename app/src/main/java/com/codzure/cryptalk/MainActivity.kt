@@ -17,6 +17,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         setupEdgeToEdge()
         enableSoftKeyboardAdjustResize()
+
     }
 
     private fun enableSoftKeyboardAdjustResize() {
