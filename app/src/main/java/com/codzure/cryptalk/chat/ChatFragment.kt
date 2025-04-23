@@ -1,4 +1,4 @@
-package com.codzure.cryptalk.home
+package com.codzure.cryptalk.chat
 
 import android.app.AlertDialog
 import android.graphics.Color
@@ -18,6 +18,7 @@ import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionManager
@@ -31,6 +32,7 @@ import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialContainerTransform
 import com.google.android.material.transition.MaterialSharedAxis
+import kotlin.getValue
 
 class ChatFragment : Fragment() {
 
@@ -38,6 +40,7 @@ class ChatFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: MessageAdapter
     private val messages = mutableListOf<Message>()
+    private val args: ChatFragmentArgs by navArgs()
     private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,6 +62,7 @@ class ChatFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupToolbar()
         setupRecyclerView()
         setupInputField()
         setupKeyboardVisibilityListener()
@@ -70,6 +74,10 @@ class ChatFragment : Fragment() {
             Log.d("ChatFragment", "Status bar top: ${systemBars.top}")
             insets
         }
+    }
+
+    private fun setupToolbar() {
+       binding.toolbarTitle.text= args.senderName
     }
 
     private fun setupRecyclerView() {
@@ -107,6 +115,15 @@ class ChatFragment : Fragment() {
         binding.messageList.addItemDecoration(
             DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
         )
+
+//        // ✅ Empty state toggle
+//        if (messages.isEmpty()) {
+//            binding.emptyView.visibility = View.VISIBLE
+//            binding.messageList.visibility = View.GONE
+//        } else {
+//            binding.emptyView.visibility = View.GONE
+//            binding.messageList.visibility = View.VISIBLE
+//        }
     }
 
     private fun setupInputField() {
@@ -312,6 +329,6 @@ class ChatFragment : Fragment() {
             binding.root.viewTreeObserver.removeOnGlobalLayoutListener(it)
         }
         super.onDestroyView()
-        _binding = null
+
     }
 }

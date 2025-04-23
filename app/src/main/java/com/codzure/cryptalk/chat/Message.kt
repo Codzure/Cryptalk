@@ -1,4 +1,4 @@
-package com.codzure.cryptalk.home
+package com.codzure.cryptalk.chat
 
 data class Message(
     val id: String,
