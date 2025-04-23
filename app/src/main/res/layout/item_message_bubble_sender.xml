@@ -1,0 +1,81 @@
+<LinearLayout
+    android:id="@+id/messageRoot"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="4dp"
+    android:gravity="end"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Bubble -->
+    <LinearLayout
+        android:id="@+id/bubbleContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_message_bubble_self"
+        android:paddingVertical="8dp"
+        android:paddingHorizontal="12dp">
+
+        <!-- Header Row -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/senderInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="John Doe"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorPrimary"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_marginStart="4dp"
+                android:contentDescription="Verified" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/messageTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12:45"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
+
+        <!-- Message -->
+        <TextView
+            android:id="@+id/messageText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Your message here"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?android:attr/textColorPrimary"
+            android:lineSpacingMultiplier="1.1"
+            android:maxLines="4"
+            android:ellipsize="end" />
+
+        <!-- Status -->
+        <ImageView
+            android:id="@+id/deliveryStatus"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:layout_marginTop="2dp"
+            android:layout_gravity="end"
+            android:contentDescription="Delivered"
+            android:visibility="gone" />
+    </LinearLayout>
+</LinearLayout>
