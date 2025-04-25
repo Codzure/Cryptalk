@@ -3,6 +3,7 @@ package com.codzure.cryptalk.chat
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.codzure.cryptalk.data.Conversation
 import com.codzure.cryptalk.databinding.ItemConversationBinding
 import java.text.SimpleDateFormat
 import java.util.*

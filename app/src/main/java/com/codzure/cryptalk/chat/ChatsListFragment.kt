@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.codzure.cryptalk.data.Conversation
+import com.codzure.cryptalk.data.Message
 import com.codzure.cryptalk.databinding.FragmentChatsListBinding
 import java.util.UUID
 
@@ -85,7 +87,7 @@ class ChatsListFragment : Fragment() {
                 pinHash = null,
                 isEncrypted = false,
 
-            ),
+                ),
             Message(
                 id = UUID.randomUUID().toString(),
                 sender = "Kai",

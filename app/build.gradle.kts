@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.supabase.realtime)
     implementation(libs.supabase.storage)
     implementation(libs.supabase.functions)
+    implementation(libs.androidx.gridlayout)
     //implementation(libs.supabase.core)
 
 

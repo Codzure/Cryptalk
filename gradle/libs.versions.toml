@@ -16,6 +16,9 @@ supabase = "3.1.4"
 junit = "4.13.2"
 androidx-junit = "1.2.1"
 espresso = "3.6.1"
+gridlayout = "1.1.0"
+zxing = "4.3.0"
+supabase_beta = "1.0.0-beta-7"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -29,6 +32,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-transition = { group = "androidx.transition", name = "transition", version.ref = "transition" }
+zxing = { group = "com.journeyapps", name = "zxing-android-embedded", version.ref = "zxing" }
 
 # Activity & Navigation
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
@@ -47,12 +51,13 @@ supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt" }
 supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt" }
 supabase-functions = { module = "io.github.jan-tennert.supabase:functions-kt" }
 supabase-core = { module = "io.github.jan-tennert.supabase:core-kt", version.ref = "supabase" }
-
+supabase-gotrue = { group = "io.github.jan-tennert.supabase", name = "gotrue", version.ref = "supabase_beta" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-junit" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
+androidx-gridlayout = { group = "androidx.gridlayout", name = "gridlayout", version.ref = "gridlayout" }
 
 
 

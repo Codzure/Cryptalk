@@ -6,6 +6,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.codzure.cryptalk.R
+import com.codzure.cryptalk.data.Message
 import java.text.SimpleDateFormat
 import java.util.*
 
