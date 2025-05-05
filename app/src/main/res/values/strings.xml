@@ -49,6 +49,7 @@
 
 <!-- Chat -->
 <string name="type_message">Type a message…</string>
+<string name="type_a_message">Type a message</string>
 <string name="encrypt">Encrypt</string>
 <string name="encrypted_message">Encrypted Message</string>
 <string name="tap_to_decrypt">Tap to decrypt</string>
@@ -72,6 +73,14 @@
 <string name="block_user">Block User</string>
 <string name="unblock_user">Unblock User</string>
 <string name="encryption_details">Encryption Details</string>
+
+<!-- Accessibility -->
+<string name="navigation_back_description">Navigate back</string>
+<string name="message_list_description">Chat messages</string>
+<string name="message_input_description">Message input field</string>
+<string name="send_message_description">Send message</string>
+<string name="encryption_toggle_description">Toggle message encryption</string>
+<string name="no_conversations_yet">No conversations yet</string>
 
 <!-- Security Features -->
 <string name="enter_pin">Enter PIN</string>
@@ -174,7 +183,6 @@
 <string name="confirm_block">Are you sure you want to block this user?</string>
 <string name="confirm_clear_chat">Are you sure you want to clear this chat?</string>
 <string name="action_cannot_be_undone">This action cannot be undone</string>
-
 
 <!-- Miscellaneous - Need to be deleted -->
 <string name="message">Enter message ...</string>

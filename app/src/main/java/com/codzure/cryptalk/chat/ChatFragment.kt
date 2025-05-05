@@ -35,7 +35,6 @@ import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialContainerTransform
 import com.google.android.material.transition.MaterialSharedAxis
-import kotlin.getValue
 
 class ChatFragment : Fragment() {
 
@@ -49,7 +48,7 @@ class ChatFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val enterTransition = MaterialSharedAxis(MaterialSharedAxis.Z, /* forward= */ true)
-        enterTransition.duration = 300
+        enterTransition.duration = ANIMATION_DURATION_SHORT
         this.enterTransition = enterTransition
         this.exitTransition = enterTransition
     }
@@ -85,14 +84,14 @@ class ChatFragment : Fragment() {
     }
 
     private fun setupToolbar() {
-       binding.toolbarTitle.text= args.senderName
+        binding.toolbarTitle.text = args.senderName
     }
 
     private fun setupRecyclerView() {
         adapter = MessageAdapter(messages) { message, itemView ->
             if (message.pinHash != null) {
                 showPinDialog(PinMode.DECRYPT) { inputPin ->
-                    if (hashPin(inputPin) == message.pinHash) {
+                    if (securelyHashPin(inputPin) == message.pinHash) {
                         try {
                             val decrypted = AES.decrypt(message.encodedText, inputPin)
                             animateDecryption(itemView)
@@ -107,7 +106,8 @@ class ChatFragment : Fragment() {
             }
         }
 
-        val controller = AnimationUtils.loadLayoutAnimation(context, R.anim.layout_animation_fall_down)
+        val controller =
+            AnimationUtils.loadLayoutAnimation(context, R.anim.layout_animation_fall_down)
         binding.messageList.layoutAnimation = controller
         binding.messageList.scheduleLayoutAnimation()
 
@@ -137,10 +137,10 @@ class ChatFragment : Fragment() {
 
     private fun setupInputField() {
         binding.apply {
-           sendButton.setOnClickListener {
-               sendPlainMessage()
-               hideKeyboard()
-           }
+            sendButton.setOnClickListener {
+                sendPlainMessage()
+                hideKeyboard()
+            }
 
             encryptionToggle.setOnClickListener {
                 promptForEncryption()
@@ -192,21 +192,9 @@ class ChatFragment : Fragment() {
             val screenHeight = rootView.height
             val keypadHeight = screenHeight - rect.bottom
 
-            if (keypadHeight > screenHeight * 0.15) {
-                // Keyboard is visible, try scrolling RecyclerView
-                binding.messageList.post {
-                    val inputRect = Rect()
-                    binding.container.getGlobalVisibleRect(inputRect)
-                    val scrollY = inputRect.bottom - rect.bottom
-                    if (scrollY > 0) {
-                        binding.messageList.scrollBy(0, scrollY)
-                    }
-                    // Fallback: Translate MaterialCardView up
-                    if (inputRect.bottom > rect.bottom) {
-                        val translationY = (rect.bottom - inputRect.bottom).toFloat()
-                        binding.container.translationY = translationY
-                    }
-                }
+            if (keypadHeight > screenHeight * KEYBOARD_THRESHOLD_RATIO) {
+                // Keyboard is visible, adjust UI accordingly
+                handleKeyboardShown(rect)
             } else {
                 // Keyboard is hidden, reset scroll and translation
                 binding.messageList.scrollTo(0, 0)
@@ -214,6 +202,22 @@ class ChatFragment : Fragment() {
             }
         }
         rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
+    }
+
+    private fun handleKeyboardShown(rect: Rect) {
+        binding.messageList.post {
+            val inputRect = Rect()
+            binding.container.getGlobalVisibleRect(inputRect)
+            val scrollY = inputRect.bottom - rect.bottom
+            if (scrollY > 0) {
+                binding.messageList.scrollBy(0, scrollY)
+            }
+            // Fallback: Translate MaterialCardView up
+            if (inputRect.bottom > rect.bottom) {
+                val translationY = (rect.bottom - inputRect.bottom).toFloat()
+                binding.container.translationY = translationY
+            }
+        }
     }
 
     private fun promptForEncryption() {
@@ -235,35 +239,46 @@ class ChatFragment : Fragment() {
     private fun sendMessage(messageText: String, pin: String?) {
         try {
             val (finalMessage, pinHash) = if (pin != null) {
-                AES.encrypt(messageText, pin) to hashPin(pin)
+                AES.encrypt(messageText, pin) to securelyHashPin(pin)
             } else {
                 messageText to null
             }
 
-            val newMessage = Message(
-                id = System.currentTimeMillis().toString(),
-                sender = "Leonard Mutugi",
-                encodedText = finalMessage,
-                senderNumber = "1234567890",
-                pinHash = pinHash,
-                isEncrypted = pin != null,
-                timestamp = System.currentTimeMillis()
-            )
+            val newMessage = createMessageObject(finalMessage, pinHash, pin != null)
+            addMessageAndUpdateUI(newMessage)
 
-            messages.add(newMessage)
-            adapter.notifyItemInserted(messages.size - 1)
-            binding.messageList.smoothScrollToPosition(messages.size - 1)
-            updateEmptyState()
-            binding.messageInput.text?.clear()
-
-            // Simulate reply after 1.5 seconds
+            // Simulate reply after delay
             binding.messageList.postDelayed({
                 simulateReceiverReply()
-            }, 1500)
+            }, REPLY_DELAY_MS)
 
         } catch (e: Exception) {
             showErrorSnackbar("Encryption failed: ${e.message}")
         }
+    }
+
+    private fun createMessageObject(
+        messageText: String,
+        pinHash: String?,
+        isEncrypted: Boolean
+    ): Message {
+        return Message(
+            id = System.currentTimeMillis().toString(),
+            sender = "Leonard Mutugi", // Consider getting this from user preferences
+            encodedText = messageText,
+            senderNumber = "1234567890", // Consider getting this from user preferences
+            pinHash = pinHash,
+            isEncrypted = isEncrypted,
+            timestamp = System.currentTimeMillis()
+        )
+    }
+
+    private fun addMessageAndUpdateUI(message: Message) {
+        messages.add(message)
+        adapter.notifyItemInserted(messages.size - 1)
+        binding.messageList.smoothScrollToPosition(messages.size - 1)
+        updateEmptyState()
+        binding.messageInput.text?.clear()
     }
 
     private fun simulateReceiverReply() {
@@ -307,7 +322,7 @@ class ChatFragment : Fragment() {
         dialog.setOnShowListener {
             val root = dialogView.parent as View
             root.alpha = 0f
-            root.animate().alpha(1f).setDuration(300).start()
+            root.animate().alpha(1f).setDuration(ANIMATION_DURATION_SHORT).start()
         }
 
         dialog.show()
@@ -320,15 +335,23 @@ class ChatFragment : Fragment() {
             .show()
     }
 
-    private fun hashPin(pin: String): String {
-        return (pin.hashCode() xor 0x5f3759df).toString()
+    private fun securelyHashPin(pin: String): String {
+        try {
+            val digest = java.security.MessageDigest.getInstance("SHA-256")
+            val hash = digest.digest(pin.toByteArray())
+            return hash.joinToString("") { "%02x".format(it) }
+        } catch (e: Exception) {
+            Log.e(TAG, "Hash failure: ${e.message}")
+            // Fallback to simple hash if crypto fails
+            return (pin.hashCode() xor 0x5f3759df).toString()
+        }
     }
 
     private fun animateDecryption(view: View) {
         val transition = MaterialContainerTransform().apply {
             startView = view
             endView = view
-            duration = 500
+            duration = ANIMATION_DURATION_MEDIUM
             scrimColor = Color.TRANSPARENT
             startShapeAppearanceModel = ShapeAppearanceModel().withCornerSize(0f)
             endShapeAppearanceModel = ShapeAppearanceModel().withCornerSize(32f)
@@ -342,7 +365,15 @@ class ChatFragment : Fragment() {
         globalLayoutListener?.let {
             binding.root.viewTreeObserver.removeOnGlobalLayoutListener(it)
         }
+        _binding = null
         super.onDestroyView()
+    }
 
+    companion object {
+        private const val KEYBOARD_THRESHOLD_RATIO = 0.15
+        private const val ANIMATION_DURATION_SHORT = 300L
+        private const val ANIMATION_DURATION_MEDIUM = 500L
+        private const val REPLY_DELAY_MS = 1500L
+        private const val TAG = "ChatFragment"
     }
 }
