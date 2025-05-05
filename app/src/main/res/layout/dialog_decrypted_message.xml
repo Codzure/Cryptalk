@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:padding="24dp"
     android:orientation="vertical"
-    android:background="@drawable/dialog_background"
+    android:background="@drawable/message_input_background"
     android:gravity="center_horizontal">
 
     <TextView
@@ -24,12 +24,11 @@
         android:textColor="@android:color/black"
         android:textSize="16sp"
         android:padding="8dp"
-        android:background="@drawable/message_bubble_decrypted"
         android:layout_marginBottom="20dp" />
 
     <Button
         android:id="@+id/closeButton"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:text="Got it!"
         android:backgroundTint="@color/purple_light"

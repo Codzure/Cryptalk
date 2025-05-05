@@ -28,6 +28,7 @@ import com.codzure.cryptalk.databinding.FragmentChatBinding
 import com.codzure.cryptalk.dialogs.PinInputDialogFragment
 import com.codzure.cryptalk.dialogs.PinMode
 import com.codzure.cryptalk.extensions.AESAlgorithm.AES
+import com.codzure.cryptalk.extensions.hideKeyboard
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
@@ -66,6 +67,7 @@ class ChatFragment : Fragment() {
         setupToolbar()
         setupRecyclerView()
         setupInputField()
+        updateEmptyState()
         setupKeyboardVisibilityListener()
 
         // Handle window insets for status bar
@@ -120,33 +122,33 @@ class ChatFragment : Fragment() {
         binding.messageList.addItemDecoration(
             DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)
         )
+    }
 
-//        // ✅ Empty state toggle
-//        if (messages.isEmpty()) {
-//            binding.emptyView.visibility = View.VISIBLE
-//            binding.messageList.visibility = View.GONE
-//        } else {
-//            binding.emptyView.visibility = View.GONE
-//            binding.messageList.visibility = View.VISIBLE
-//        }
+    private fun updateEmptyState() {
+        if (messages.isEmpty()) {
+            binding.emptyView.visibility = View.VISIBLE
+            binding.messageList.visibility = View.GONE
+        } else {
+            binding.emptyView.visibility = View.GONE
+            binding.messageList.visibility = View.VISIBLE
+        }
     }
 
     private fun setupInputField() {
         binding.apply {
-            messageInput.setOnEditorActionListener { _, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_SEND) {
-                    promptForEncryption()
-                    true
-                } else false
-            }
+           sendButton.setOnClickListener {
+               sendPlainMessage()
+               hideKeyboard()
+           }
 
-            zapSendButton.setOnClickListener {
+            encryptionToggle.setOnClickListener {
                 promptForEncryption()
             }
 
             messageInput.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
-                    zapSendButton.isEnabled = s?.isNotEmpty() == true
+                    sendButton.isEnabled = s?.isNotEmpty() == true
+                    encryptionToggle.isEnabled = s?.isNotEmpty() == true
                 }
 
                 override fun beforeTextChanged(
@@ -175,6 +177,12 @@ class ChatFragment : Fragment() {
         }
     }
 
+    private fun sendPlainMessage() {
+        val messageText = binding.messageInput.text.toString().trim()
+        if (messageText.isEmpty()) return
+        sendMessage(messageText, null)
+    }
+
     private fun setupKeyboardVisibilityListener() {
         val rootView = binding.root
         globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
@@ -195,13 +203,13 @@ class ChatFragment : Fragment() {
                     // Fallback: Translate MaterialCardView up
                     if (inputRect.bottom > rect.bottom) {
                         val translationY = (rect.bottom - inputRect.bottom).toFloat()
-                        binding.inputWrapper.translationY = translationY
+                        binding.container.translationY = translationY
                     }
                 }
             } else {
                 // Keyboard is hidden, reset scroll and translation
                 binding.messageList.scrollTo(0, 0)
-                binding.inputWrapper.translationY = 0f
+                binding.container.translationY = 0f
             }
         }
         rootView.viewTreeObserver.addOnGlobalLayoutListener(globalLayoutListener)
@@ -217,10 +225,8 @@ class ChatFragment : Fragment() {
             .setPositiveButton("Encrypt") { _, _ ->
                 showPinDialog(PinMode.ENCRYPT) { pin ->
                     sendMessage(messageText, pin)
+                    hideKeyboard()
                 }
-            }
-            .setNegativeButton("Send Plain") { _, _ ->
-                sendMessage(messageText, null)
             }
             .show()
     }
@@ -246,6 +252,7 @@ class ChatFragment : Fragment() {
             messages.add(newMessage)
             adapter.notifyItemInserted(messages.size - 1)
             binding.messageList.smoothScrollToPosition(messages.size - 1)
+            updateEmptyState()
             binding.messageInput.text?.clear()
 
             // Simulate reply after 1.5 seconds
@@ -272,6 +279,7 @@ class ChatFragment : Fragment() {
         messages.add(replyMessage)
         adapter.notifyItemInserted(messages.size - 1)
         binding.messageList.smoothScrollToPosition(messages.size - 1)
+        updateEmptyState()
     }
 
     private fun showPinDialog(mode: PinMode, onPinEntered: (String) -> Unit) {

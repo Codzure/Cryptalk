@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.gridlayout)
 
     // Supabase (via BOM)
     implementation(platform(libs.supabase.bom))
