@@ -46,14 +46,17 @@ class ChatsListFragment : Fragment() {
             binding.chatsRecyclerView.visibility = View.VISIBLE
         }
 
-        adapter = ConversationsAdapter(conversations) { userId ->
-            val conversation = conversations.find { it.userId == userId }
-            if (conversation != null) {
-                val action =
-                    ChatsListFragmentDirections.toChatFragment(userId, conversation.userName)
-                findNavController().navigate(action)
-            }
+        // Initialize adapter with conversation click handler
+        adapter = ConversationsAdapter { conversation ->
+            val action = ChatsListFragmentDirections.toChatFragment(
+                conversation.userId, 
+                conversation.userName
+            )
+            findNavController().navigate(action)
         }
+        
+        // Submit conversations to the adapter
+        adapter.submitConversations(conversations)
 
         binding.chatsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())

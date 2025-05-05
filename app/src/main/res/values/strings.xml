@@ -81,6 +81,9 @@
 <string name="send_message_description">Send message</string>
 <string name="encryption_toggle_description">Toggle message encryption</string>
 <string name="no_conversations_yet">No conversations yet</string>
+<string name="profile_avatar_description">Profile avatar</string>
+<string name="encrypted_message_description">Encrypted message</string>
+<string name="conversation_with_accessibility">Conversation with %1$s</string>
 
 <!-- Security Features -->
 <string name="enter_pin">Enter PIN</string>

@@ -185,14 +185,17 @@ class ChatFragment : Fragment() {
     }
 
     private fun setupKeyboardVisibilityListener() {
-        val rootView = binding.root
+        val rootView = requireActivity().window.decorView.rootView
         globalLayoutListener = ViewTreeObserver.OnGlobalLayoutListener {
             val rect = Rect()
             rootView.getWindowVisibleDisplayFrame(rect)
             val screenHeight = rootView.height
             val keypadHeight = screenHeight - rect.bottom
-
-            if (keypadHeight > screenHeight * KEYBOARD_THRESHOLD_RATIO) {
+            
+            // Avoid NPE by checking if binding is still available
+            if (_binding == null) return@OnGlobalLayoutListener
+            
+            if (keypadHeight > screenHeight * MIN_KEYBOARD_HEIGHT_RATIO) {
                 // Keyboard is visible, adjust UI accordingly
                 handleKeyboardShown(rect)
             } else {
@@ -205,6 +208,9 @@ class ChatFragment : Fragment() {
     }
 
     private fun handleKeyboardShown(rect: Rect) {
+        // Avoid NPE by checking if binding is still available
+        if (_binding == null) return
+        
         binding.messageList.post {
             val inputRect = Rect()
             binding.container.getGlobalVisibleRect(inputRect)
@@ -370,7 +376,7 @@ class ChatFragment : Fragment() {
     }
 
     companion object {
-        private const val KEYBOARD_THRESHOLD_RATIO = 0.15
+        private const val MIN_KEYBOARD_HEIGHT_RATIO = 0.15
         private const val ANIMATION_DURATION_SHORT = 300L
         private const val ANIMATION_DURATION_MEDIUM = 500L
         private const val REPLY_DELAY_MS = 1500L

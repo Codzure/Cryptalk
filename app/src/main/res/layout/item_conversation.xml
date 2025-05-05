@@ -1,97 +1,98 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="72dp"
-    android:orientation="horizontal"
-    android:paddingHorizontal="12dp"
-    android:paddingVertical="10dp"
-    android:gravity="center_vertical"
+    android:paddingHorizontal="@dimen/spacing_medium"
+    android:paddingVertical="@dimen/spacing_small"
     android:background="?attr/selectableItemBackground"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:importantForAccessibility="yes">
 
     <!-- Circular Avatar with Text -->
     <FrameLayout
+        android:id="@+id/avatarContainer"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_marginEnd="12dp"
         android:background="@drawable/bg_avatar_circle"
-        android:padding="2dp">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:contentDescription="@string/profile_avatar_description">
 
         <TextView
             android:id="@+id/avatarText"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="Z"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textColor="@color/background_light"
+            android:textSize="@dimen/text_size_large"
+            android:textStyle="bold"
+            tools:text="Z" />
     </FrameLayout>
 
-    <!-- Chat Details -->
-    <LinearLayout
+    <!-- Name + Timestamp -->
+    <TextView
+        android:id="@+id/nameText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:layout_marginStart="@dimen/spacing_medium"
+        android:layout_marginEnd="@dimen/spacing_small"
+        android:textSize="@dimen/text_size_large"
+        android:textStyle="bold"
+        android:textColor="?android:attr/textColorPrimary"
+        android:maxLines="1"
+        android:ellipsize="end"
+        app:layout_constraintStart_toEndOf="@id/avatarContainer"
+        app:layout_constraintEnd_toStartOf="@id/timestampText"
+        app:layout_constraintTop_toTopOf="@id/avatarContainer"
+        app:layout_constraintHorizontal_bias="0"
+        tools:text="User Name" />
 
-        <!-- Name + Timestamp -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+    <TextView
+        android:id="@+id/timestampText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/text_size_small"
+        android:textColor="?android:attr/textColorSecondary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/nameText"
+        app:layout_constraintBottom_toBottomOf="@id/nameText"
+        tools:text="10:32 AM" />
 
-            <TextView
-                android:id="@+id/nameText"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Zara"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#111111"
-                android:maxLines="1"
-                android:ellipsize="end"/>
+    <!-- Message + Lock Icon -->
+    <TextView
+        android:id="@+id/messageText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_medium"
+        android:layout_marginEnd="@dimen/spacing_small"
+        android:layout_marginTop="@dimen/spacing_tiny"
+        android:textSize="@dimen/text_size_medium"
+        android:textColor="?android:attr/textColorSecondary"
+        android:maxLines="2"
+        android:ellipsize="end"
+        app:layout_constraintStart_toEndOf="@id/avatarContainer"
+        app:layout_constraintEnd_toStartOf="@id/lockIcon"
+        app:layout_constraintTop_toBottomOf="@id/nameText"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:text="Message content preview text..." />
 
-            <TextView
-                android:id="@+id/timestampText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="10:32 AM"
-                android:textSize="12sp"
-                android:textColor="#999999"/>
-        </LinearLayout>
+    <ImageView
+        android:id="@+id/lockIcon"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:src="@drawable/ic_lock"
+        android:layout_marginStart="@dimen/spacing_tiny"
+        android:visibility="gone"
+        android:contentDescription="@string/encrypted_message_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/messageText"
+        app:layout_constraintBottom_toBottomOf="@id/messageText"
+        tools:visibility="visible" />
 
-        <!-- Message + Lock Icon -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginTop="2dp">
-
-            <TextView
-                android:id="@+id/messageText"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Encrypted tea ☕️ incoming"
-                android:textSize="14sp"
-                android:textColor="#666666"
-                android:maxLines="1"
-                android:ellipsize="end"/>
-
-            <ImageView
-                android:id="@+id/lockIcon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_action_settings"
-                android:layout_marginStart="6dp"
-                android:visibility="gone"/>
-        </LinearLayout>
-    </LinearLayout>
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
