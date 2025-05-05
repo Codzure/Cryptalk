@@ -1,13 +1,17 @@
-package com.codzure.cryptalk.chat
+package com.codzure.cryptalk.adapters
 
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.codzure.cryptalk.R
+import com.codzure.cryptalk.data.Message
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class MessageAdapter(
     private val messages: List<Message>,

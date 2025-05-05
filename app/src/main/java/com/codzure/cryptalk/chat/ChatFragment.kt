@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.view.animation.AnimationUtils
-import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.TextView
 import androidx.core.view.ViewCompat
@@ -24,6 +23,8 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionManager
 import com.codzure.cryptalk.R
+import com.codzure.cryptalk.adapters.MessageAdapter
+import com.codzure.cryptalk.data.Message
 import com.codzure.cryptalk.databinding.FragmentChatBinding
 import com.codzure.cryptalk.dialogs.PinInputDialogFragment
 import com.codzure.cryptalk.dialogs.PinMode

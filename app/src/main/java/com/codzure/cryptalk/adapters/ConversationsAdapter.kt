@@ -1,11 +1,13 @@
-package com.codzure.cryptalk.chat
+package com.codzure.cryptalk.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.codzure.cryptalk.data.Conversation
 import com.codzure.cryptalk.databinding.ItemConversationBinding
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class ConversationsAdapter(
     private val conversations: List<Conversation>,
