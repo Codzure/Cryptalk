@@ -24,7 +24,7 @@ class ConversationsAdapter(
                 // Set main text elements
                 nameText.text = conversation.userName
                 messageText.text = conversation.lastMessage
-                timestampText.text = formatTimestamp(conversation.timestamp)
+                timestampText.text = formatTimestamp(conversation.lastMessageTime)
                 
                 // Set avatar initial from the first letter of the username
                 avatarText.text = conversation.userName.firstOrNull()?.toString() ?: "?"
