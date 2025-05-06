@@ -17,6 +17,7 @@ import android.widget.TextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -28,22 +29,27 @@ import com.codzure.cryptalk.data.Message
 import com.codzure.cryptalk.databinding.FragmentChatBinding
 import com.codzure.cryptalk.dialogs.PinInputDialogFragment
 import com.codzure.cryptalk.dialogs.PinMode
-import com.codzure.cryptalk.extensions.AESAlgorithm.AES
 import com.codzure.cryptalk.extensions.hideKeyboard
+import com.codzure.cryptalk.utils.DataUtils
+import com.codzure.cryptalk.viewmodels.ChatViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialContainerTransform
 import com.google.android.material.transition.MaterialSharedAxis
+import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ChatFragment : Fragment() {
 
     private var _binding: FragmentChatBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: MessageAdapter
-    private val messages = mutableListOf<Message>()
     private val args: ChatFragmentArgs by navArgs()
     private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
+    
+    // Inject ViewModel with Koin
+    private val viewModel: ChatViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,8 +73,11 @@ class ChatFragment : Fragment() {
         setupToolbar()
         setupRecyclerView()
         setupInputField()
-        updateEmptyState()
         setupKeyboardVisibilityListener()
+        observeViewModel()
+        
+        // Load conversation for this recipient
+        viewModel.loadConversation(args.userId)
 
         // Handle window insets for status bar
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
@@ -82,25 +91,60 @@ class ChatFragment : Fragment() {
             findNavController().navigateUp()
         }
     }
+    
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Observe loading state
+            viewModel.isLoading.collect { isLoading ->
+                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
+        }
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Observe messages
+            viewModel.messages.collect { messages ->
+                adapter.submitList(messages)
+                updateEmptyState(messages)
+                if (messages.isNotEmpty()) {
+                    binding.messageList.scrollToPosition(messages.size - 1)
+                }
+            }
+        }
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Observe recipient
+            viewModel.recipient.collect { user ->
+                user?.let {
+                    binding.toolbarTitle.text = it.fullName ?: args.senderName
+                }
+            }
+        }
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Observe errors
+            viewModel.error.collect { errorMessage ->
+                errorMessage?.let {
+                    showErrorSnackbar(it)
+                    viewModel.clearError()
+                }
+            }
+        }
+    }
 
     private fun setupToolbar() {
         binding.toolbarTitle.text = args.senderName
     }
 
     private fun setupRecyclerView() {
-        adapter = MessageAdapter(messages) { message, itemView ->
+        adapter = MessageAdapter(
+            emptyList(),
+            DataUtils.currentUser.id
+        ) { message, itemView ->
             if (message.pinHash != null) {
                 showPinDialog(PinMode.DECRYPT) { inputPin ->
-                    if (securelyHashPin(inputPin) == message.pinHash) {
-                        try {
-                            val decrypted = AES.decrypt(message.encodedText, inputPin)
-                            animateDecryption(itemView)
-                            showDecryptedDialog(decrypted)
-                        } catch (e: Exception) {
-                            showErrorSnackbar("Decryption failed. Please try again.")
-                        }
-                    } else {
-                        showErrorSnackbar("Incorrect PIN. Please try again.")
+                    viewModel.decryptMessage(message, inputPin) { decryptedText ->
+                        animateDecryption(itemView)
+                        showDecryptedDialog(decryptedText)
                     }
                 }
             }
@@ -125,7 +169,7 @@ class ChatFragment : Fragment() {
         )
     }
 
-    private fun updateEmptyState() {
+    private fun updateEmptyState(messages: List<Message>) {
         if (messages.isEmpty()) {
             binding.emptyView.visibility = View.VISIBLE
             binding.messageList.visibility = View.GONE
@@ -181,7 +225,8 @@ class ChatFragment : Fragment() {
     private fun sendPlainMessage() {
         val messageText = binding.messageInput.text.toString().trim()
         if (messageText.isEmpty()) return
-        sendMessage(messageText, null)
+        viewModel.sendMessage(messageText)
+        binding.messageInput.text?.clear()
     }
 
     private fun setupKeyboardVisibilityListener() {
@@ -235,73 +280,12 @@ class ChatFragment : Fragment() {
             .setMessage("Would you like to encrypt this message with a 4-digit PIN?")
             .setPositiveButton("Encrypt") { _, _ ->
                 showPinDialog(PinMode.ENCRYPT) { pin ->
-                    sendMessage(messageText, pin)
+                    viewModel.sendMessage(messageText, true, pin)
+                    binding.messageInput.text?.clear()
                     hideKeyboard()
                 }
             }
             .show()
-    }
-
-    private fun sendMessage(messageText: String, pin: String?) {
-        try {
-            val (finalMessage, pinHash) = if (pin != null) {
-                AES.encrypt(messageText, pin) to securelyHashPin(pin)
-            } else {
-                messageText to null
-            }
-
-            val newMessage = createMessageObject(finalMessage, pinHash, pin != null)
-            addMessageAndUpdateUI(newMessage)
-
-            // Simulate reply after delay
-            binding.messageList.postDelayed({
-                simulateReceiverReply()
-            }, REPLY_DELAY_MS)
-
-        } catch (e: Exception) {
-            showErrorSnackbar("Encryption failed: ${e.message}")
-        }
-    }
-
-    private fun createMessageObject(
-        messageText: String,
-        pinHash: String?,
-        isEncrypted: Boolean
-    ): Message {
-        return Message(
-            id = System.currentTimeMillis().toString(),
-            sender = "Leonard Mutugi", // Consider getting this from user preferences
-            encodedText = messageText,
-            senderNumber = "1234567890", // Consider getting this from user preferences
-            pinHash = pinHash,
-            isEncrypted = isEncrypted,
-            timestamp = System.currentTimeMillis()
-        )
-    }
-
-    private fun addMessageAndUpdateUI(message: Message) {
-        messages.add(message)
-        adapter.notifyItemInserted(messages.size - 1)
-        binding.messageList.smoothScrollToPosition(messages.size - 1)
-        updateEmptyState()
-        binding.messageInput.text?.clear()
-    }
-
-    private fun simulateReceiverReply() {
-        val replyMessage = Message(
-            id = System.currentTimeMillis().toString(),
-            sender = "Alice Wonderland",
-            encodedText = "Got your message!",
-            senderNumber = "9876543210",
-            pinHash = null,
-            isEncrypted = false,
-            timestamp = System.currentTimeMillis()
-        )
-
-        messages.add(replyMessage)
-        adapter.notifyItemInserted(messages.size - 1)
-        binding.messageList.smoothScrollToPosition(messages.size - 1)
-        updateEmptyState()
     }
 
     private fun showPinDialog(mode: PinMode, onPinEntered: (String) -> Unit) {
@@ -341,18 +325,6 @@ class ChatFragment : Fragment() {
             .show()
     }
 
-    private fun securelyHashPin(pin: String): String {
-        try {
-            val digest = java.security.MessageDigest.getInstance("SHA-256")
-            val hash = digest.digest(pin.toByteArray())
-            return hash.joinToString("") { "%02x".format(it) }
-        } catch (e: Exception) {
-            Log.e(TAG, "Hash failure: ${e.message}")
-            // Fallback to simple hash if crypto fails
-            return (pin.hashCode() xor 0x5f3759df).toString()
-        }
-    }
-
     private fun animateDecryption(view: View) {
         val transition = MaterialContainerTransform().apply {
             startView = view
@@ -379,7 +351,6 @@ class ChatFragment : Fragment() {
         private const val MIN_KEYBOARD_HEIGHT_RATIO = 0.15
         private const val ANIMATION_DURATION_SHORT = 300L
         private const val ANIMATION_DURATION_MEDIUM = 500L
-        private const val REPLY_DELAY_MS = 1500L
         private const val TAG = "ChatFragment"
     }
 }

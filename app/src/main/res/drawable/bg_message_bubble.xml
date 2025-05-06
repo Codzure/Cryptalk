@@ -1,5 +1,23 @@
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <solid android:color="#E1F5FE" />
-    <corners android:radius="24dp" />
-</shape>
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <rotate
+            android:fromDegrees="-45"
+            android:pivotX="0%"
+            android:pivotY="0%"
+            android:toDegrees="0">
+            <shape android:shape="rectangle">
+                <solid android:color="#E1F5FE" />
+                <size
+                    android:width="15dp"
+                    android:height="15dp" />
+            </shape>
+        </rotate>
+    </item>
+    <item android:left="8dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#E1F5FE" />
+            <corners android:radius="8dp" />
+        </shape>
+    </item>
+</layer-list>

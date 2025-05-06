@@ -95,4 +95,24 @@
         app:layout_constraintBottom_toBottomOf="@id/messageText"
         tools:visibility="visible" />
 
+    <!-- Unread Message Badge -->
+    <TextView
+        android:id="@+id/unreadBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="20dp"
+        android:minHeight="20dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="@dimen/spacing_tiny"
+        android:background="@drawable/bg_unread_badge"
+        android:textColor="@color/background_light"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:padding="2dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        tools:text="3"
+        app:layout_constraintTop_toBottomOf="@id/timestampText"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

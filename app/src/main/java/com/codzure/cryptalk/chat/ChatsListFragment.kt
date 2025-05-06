@@ -5,19 +5,25 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.codzure.cryptalk.adapters.ConversationsAdapter
-import com.codzure.cryptalk.data.Conversation
-import com.codzure.cryptalk.data.Message
 import com.codzure.cryptalk.databinding.FragmentChatsListBinding
-import java.util.UUID
+import com.codzure.cryptalk.models.ConversationUI
+import com.codzure.cryptalk.viewmodels.ChatsListViewModel
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class ChatsListFragment : Fragment() {
 
     private var _binding: FragmentChatsListBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: ConversationsAdapter
+    
+    // Inject ViewModel with Koin
+    private val viewModel: ChatsListViewModel by viewModel()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -31,23 +37,44 @@ class ChatsListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        observeViewModel()
+    }
+    
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Observe loading state
+            viewModel.isLoading.collect { isLoading ->
+                binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
+        }
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Observe conversations
+            viewModel.conversations.collect { conversations ->
+                updateUI(conversations)
+            }
+        }
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Observe errors
+            viewModel.error.collect { errorMessage ->
+                errorMessage?.let {
+                    Snackbar.make(binding.root, it, Snackbar.LENGTH_LONG)
+                        .setAction("Dismiss") { viewModel.clearError() }
+                        .show()
+                    viewModel.clearError()
+                }
+            }
+        }
     }
 
     private fun setupRecyclerView() {
-        val messages = getDummyMessages()
-        val conversations = getConversations(messages)
-
-        if (conversations.isEmpty()) {
-            binding.emptyView.visibility = View.VISIBLE
-            binding.chatsRecyclerView.visibility = View.GONE
-            return
-        } else {
-            binding.emptyView.visibility = View.GONE
-            binding.chatsRecyclerView.visibility = View.VISIBLE
-        }
-
         // Initialize adapter with conversation click handler
         adapter = ConversationsAdapter { conversation ->
+            // Mark conversation as read when clicked
+            viewModel.markConversationAsRead(conversation.id)
+            
+            // Navigate to chat
             val action = ChatsListFragmentDirections.toChatFragment(
                 conversation.userId, 
                 conversation.userName
@@ -55,117 +82,22 @@ class ChatsListFragment : Fragment() {
             findNavController().navigate(action)
         }
         
-        // Submit conversations to the adapter
-        adapter.submitConversations(conversations)
-
         binding.chatsRecyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = this@ChatsListFragment.adapter
             setHasFixedSize(true)
         }
     }
-
-    private fun getConversations(messages: List<Message>): List<Conversation> {
-        return messages.groupBy { it.senderNumber }
-            .mapNotNull { (userId, userMessages) ->
-                val lastMessage = userMessages.maxByOrNull { it.timestamp }
-                lastMessage?.let {
-                    Conversation(
-                        userId = userId,
-                        userName = it.sender,
-                        lastMessage = if (it.isEncrypted) "🔒 Encrypted Message" else it.encodedText,
-                        timestamp = it.timestamp,
-                        isEncrypted = it.isEncrypted
-                    )
-                }
-            }
-            .sortedByDescending { it.timestamp }
-    }
-
-    private fun getDummyMessages(): List<Message> {
-        return listOf(
-            Message(
-                id = UUID.randomUUID().toString(),
-                sender = "Luna",
-                senderNumber = "101",
-                encodedText = "yooo what's the vibe tonight? 🎉",
-                pinHash = null,
-                isEncrypted = false,
-
-                ),
-            Message(
-                id = UUID.randomUUID().toString(),
-                sender = "Kai",
-                senderNumber = "102",
-                encodedText = "this msg is top secret 🤫",
-                pinHash = "hashed_pin_456",
-                isEncrypted = true
-            ),
-            Message(
-                id = UUID.randomUUID().toString(),
-                sender = "Zara",
-                senderNumber = "103",
-                encodedText = "just dropped a 🔥 meme in the group chat lol",
-                pinHash = null,
-                isEncrypted = false
-            ),
-            Message(
-                id = UUID.randomUUID().toString(),
-                sender = "Leo",
-                senderNumber = "104",
-                encodedText = "can't talk rn, vibin' to lo-fi 🎧",
-                pinHash = null,
-                isEncrypted = false
-            ),
-            Message(
-                id = UUID.randomUUID().toString(),
-                sender = "Nina",
-                senderNumber = "105",
-                encodedText = "this msg self-destructs in 3...2...💥",
-                pinHash = "hashed_pin_789",
-                isEncrypted = true
-            ),
-            Message(
-                id = UUID.randomUUID().toString(),
-                sender = "Kai",
-                senderNumber = "102",
-                encodedText = "bet. see u all at 8 🕗",
-                pinHash = null,
-                isEncrypted = false
-            ),
-            Message(
-                id = UUID.randomUUID().toString(),
-                sender = "Luna",
-                senderNumber = "101",
-                encodedText = "don’t leave me on read 😤",
-                pinHash = null,
-                isEncrypted = false
-            ),
-            Message(
-                id = UUID.randomUUID().toString(),
-                sender = "Leo",
-                senderNumber = "104",
-                encodedText = "new playlist just dropped 🚨",
-                pinHash = null,
-                isEncrypted = false
-            ),
-            Message(
-                id = UUID.randomUUID().toString(),
-                sender = "Zara",
-                senderNumber = "103",
-                encodedText = "encrypted tea ☕️ incoming",
-                pinHash = "hashed_pin_111",
-                isEncrypted = true
-            ),
-            Message(
-                id = UUID.randomUUID().toString(),
-                sender = "Nina",
-                senderNumber = "105",
-                encodedText = "u ghosted? or nah?",
-                pinHash = null,
-                isEncrypted = false
-            )
-        )
+    
+    private fun updateUI(conversations: List<ConversationUI>) {
+        if (conversations.isEmpty()) {
+            binding.emptyView.visibility = View.VISIBLE
+            binding.chatsRecyclerView.visibility = View.GONE
+        } else {
+            binding.emptyView.visibility = View.GONE
+            binding.chatsRecyclerView.visibility = View.VISIBLE
+            adapter.submitConversations(conversations)
+        }
     }
 
     override fun onDestroyView() {
@@ -173,6 +105,3 @@ class ChatsListFragment : Fragment() {
         _binding = null
     }
 }
-
-
-//val conversations = viewModel.getConversations().observe(viewLifecycleOwner) { updateUI(it) }
