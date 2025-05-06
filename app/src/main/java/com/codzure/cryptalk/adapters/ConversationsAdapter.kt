@@ -6,20 +6,20 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.codzure.cryptalk.R
-import com.codzure.cryptalk.data.Conversation
+import com.codzure.cryptalk.models.ConversationUI
 import com.codzure.cryptalk.databinding.ItemConversationBinding
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class ConversationsAdapter(
-    private val onClick: (Conversation) -> Unit
-) : ListAdapter<Conversation, ConversationsAdapter.ConversationViewHolder>(CONVERSATION_COMPARATOR) {
+    private val onClick: (ConversationUI) -> Unit
+) : ListAdapter<ConversationUI, ConversationsAdapter.ConversationViewHolder>(CONVERSATION_COMPARATOR) {
 
     inner class ConversationViewHolder(private val binding: ItemConversationBinding) :
         RecyclerView.ViewHolder(binding.root) {
         
-        fun bind(conversation: Conversation) {
+        fun bind(conversation: ConversationUI) {
             with(binding) {
                 // Set main text elements
                 nameText.text = conversation.userName
@@ -34,6 +34,14 @@ class ConversationsAdapter(
                     ViewGroup.VISIBLE
                 } else {
                     ViewGroup.GONE
+                }
+                
+                // Show unread message count if there are any
+                if (conversation.unreadCount > 0) {
+                    unreadBadge.visibility = ViewGroup.VISIBLE
+                    unreadBadge.text = conversation.unreadCount.toString()
+                } else {
+                    unreadBadge.visibility = ViewGroup.GONE
                 }
                 
                 // Set accessibility descriptions
@@ -68,12 +76,12 @@ class ConversationsAdapter(
         /**
          * DiffUtil callback to efficiently update the RecyclerView
          */
-        private val CONVERSATION_COMPARATOR = object : DiffUtil.ItemCallback<Conversation>() {
-            override fun areItemsTheSame(oldItem: Conversation, newItem: Conversation): Boolean {
-                return oldItem.userId == newItem.userId
+        private val CONVERSATION_COMPARATOR = object : DiffUtil.ItemCallback<ConversationUI>() {
+            override fun areItemsTheSame(oldItem: ConversationUI, newItem: ConversationUI): Boolean {
+                return oldItem.id == newItem.id
             }
 
-            override fun areContentsTheSame(oldItem: Conversation, newItem: Conversation): Boolean {
+            override fun areContentsTheSame(oldItem: ConversationUI, newItem: ConversationUI): Boolean {
                 return oldItem == newItem
             }
         }
@@ -96,7 +104,7 @@ class ConversationsAdapter(
     /**
      * Submit a new list of conversations with DiffUtil support
      */
-    fun submitConversations(conversations: List<Conversation>) {
+    fun submitConversations(conversations: List<ConversationUI>) {
         submitList(conversations)
     }
 }
