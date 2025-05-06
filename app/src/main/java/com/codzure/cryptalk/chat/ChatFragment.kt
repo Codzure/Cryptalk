@@ -30,6 +30,7 @@ import com.codzure.cryptalk.databinding.FragmentChatBinding
 import com.codzure.cryptalk.dialogs.PinInputDialogFragment
 import com.codzure.cryptalk.dialogs.PinMode
 import com.codzure.cryptalk.extensions.hideKeyboard
+import com.codzure.cryptalk.utils.DataUtils
 import com.codzure.cryptalk.viewmodels.ChatViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.shape.ShapeAppearanceModel
@@ -76,7 +77,7 @@ class ChatFragment : Fragment() {
         observeViewModel()
         
         // Load conversation for this recipient
-        viewModel.loadConversation("11111") //args.senderId
+        viewModel.loadConversation(args.userId)
 
         // Handle window insets for status bar
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
@@ -135,7 +136,10 @@ class ChatFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = MessageAdapter(emptyList()) { message, itemView ->
+        adapter = MessageAdapter(
+            emptyList(),
+            DataUtils.currentUser.id
+        ) { message, itemView ->
             if (message.pinHash != null) {
                 showPinDialog(PinMode.DECRYPT) { inputPin ->
                     viewModel.decryptMessage(message, inputPin) { decryptedText ->

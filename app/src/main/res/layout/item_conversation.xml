@@ -102,6 +102,7 @@
         android:layout_height="wrap_content"
         android:minWidth="20dp"
         android:minHeight="20dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginTop="@dimen/spacing_tiny"
         android:background="@drawable/bg_unread_badge"
         android:textColor="@color/background_light"
