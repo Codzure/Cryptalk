@@ -7,20 +7,19 @@ import com.codzure.cryptalk.utils.SupabaseConfig
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Order
+import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.RealtimeChannel
+import io.github.jan.supabase.realtime.RealtimeChannelBuilder
+import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import java.util.UUID
-import io.github.jan.supabase.postgrest.query.Order
-import io.github.jan.supabase.realtime.PostgresAction
-import io.github.jan.supabase.realtime.RealtimeChannelBuilder
-import io.github.jan.supabase.realtime.postgresChangeFlow
 
 /**
  * Singleton class to manage Supabase connection and operations
@@ -31,10 +30,9 @@ object SupabaseClient {
     private const val USERS_TABLE = "users"
     private const val TAG = "SupabaseClient"
 
-    private lateinit var messagesChannel: RealtimeChannel
-    private lateinit var conversationsChannel: RealtimeChannel
+    private var messagesChannel: RealtimeChannel? = null
+    private var conversationsChannel: RealtimeChannel? = null
 
-    private val json = Json { ignoreUnknownKeys = true }
     private val scope = CoroutineScope(Dispatchers.IO)
 
     // StateFlows to hold data
@@ -65,40 +63,49 @@ object SupabaseClient {
         scope.launch {
             try {
                 // Setup messages channel
-                messagesChannel = client.realtime.channel("public:$MESSAGES_TABLE")
-                messagesChannel.subscribe()
+                messagesChannel = subscribeToChannel(MESSAGES_TABLE)
 
                 // Setup conversations channel
-                conversationsChannel = client.realtime.channel("public:$CONVERSATIONS_TABLE")
-                conversationsChannel.subscribe()
+                conversationsChannel = subscribeToChannel(CONVERSATIONS_TABLE)
 
-                // Collect changes for messages
+                // Listen for message changes
                 scope.launch {
-                    client.realtime.postgresChangeFlow<PostgresAction> {
-                        schema = "public"
-                        table = MESSAGES_TABLE
-                    }.collect { action ->
-                        Log.d(TAG, "Message table update: $action")
-                        fetchMessages()
+                    try {
+                        messagesChannel?.postgresChangeFlow<PostgresAction>("public") {
+                            table = MESSAGES_TABLE
+                        }?.collect { action ->
+                            Log.d(TAG, "Message table update: $action")
+                            fetchMessages()
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error in messages flow: ${e.message}")
                     }
                 }
 
-                // Collect changes for conversations
+                // Listen for conversation changes
                 scope.launch {
-                    client.realtime.postgresChangeFlow<PostgresAction> {
-                        schema = "public"
-                        table = CONVERSATIONS_TABLE
-                    }.collect { action ->
-                        Log.d(TAG, "Conversation table update: $action")
-                        fetchConversations()
+                    try {
+                        conversationsChannel?.postgresChangeFlow<PostgresAction>("public") {
+                            table = CONVERSATIONS_TABLE
+                        }?.collect { action ->
+                            Log.d(TAG, "Conversation table update: $action")
+                            fetchConversations()
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error in conversations flow: ${e.message}")
                     }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error setting up realtime channels: ${e.message}")
+            e.printStackTrace()
                 e.printStackTrace()
             }
         }
     }
+
+    private suspend fun subscribeToChannel(tableName: String): RealtimeChannel =
+        client.realtime.channel("public:$tableName", builder = {})
+            .apply { subscribe() }
 
     private fun fetchInitialData() {
         fetchUsers()
@@ -170,9 +177,9 @@ object SupabaseClient {
     suspend fun updateMessageReadStatus(messageId: String, isRead: Boolean) {
         try {
             val response = client.from(MESSAGES_TABLE)
-                .update(mapOf("is_read" to isRead))
-                //.eq("id", messageId)
-
+                .update(mapOf("is_read" to isRead)) {
+                    //eq("id", messageId)
+                }
             Log.d(TAG, "Message read status updated: $response")
         } catch (e: Exception) {
             Log.e(TAG, "Error updating message read status: ${e.message}")
@@ -281,8 +288,10 @@ object SupabaseClient {
 
     suspend fun unsubscribeAll() {
         try {
-            messagesChannel.unsubscribe()
-            conversationsChannel.unsubscribe()
+            messagesChannel?.unsubscribe()
+            conversationsChannel?.unsubscribe()
+            messagesChannel = null
+            conversationsChannel = null
         } catch (e: Exception) {
             Log.e(TAG, "Error unsubscribing from channels: ${e.message}")
             e.printStackTrace()

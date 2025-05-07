@@ -22,7 +22,7 @@ koin = "4.0.0"
 androidx-lifecycle = "2.8.7"
 androidx-navigation = "2.7.7"
 
-supabase = "3.1.4"
+supabase = "3.1.3"
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -49,9 +49,10 @@ androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
 # Supabase (BOM-managed)
-supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
-supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "supabase" }
 supabase-core = { module = "io.github.jan-tennert.supabase:core-kt", version.ref = "supabase" }
+supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt", version.ref = "supabase" }
+supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
+supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabase" }
 
 # Testing
 junit = { group = "junit", name = "junit", version.ref = "junit" }
