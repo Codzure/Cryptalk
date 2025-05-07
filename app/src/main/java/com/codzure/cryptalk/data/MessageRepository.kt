@@ -1,5 +1,6 @@
 package com.codzure.cryptalk.data
 
+import com.codzure.cryptalk.SupabaseClient
 import com.codzure.cryptalk.extensions.AESAlgorithm
 import com.codzure.cryptalk.models.ConversationUI
 import com.codzure.cryptalk.utils.DataUtils
@@ -25,25 +26,13 @@ interface MessageRepository {
 }
 
 /**
- * Implementation of MessageRepository using your actual data models
+ * Implementation of MessageRepository using Supabase for cloud storage
  */
 class MessageRepositoryImpl : MessageRepository {
-    // In-memory storage for demo
-    private val messagesFlow = MutableStateFlow<List<Message>>(emptyList())
-    private val conversationsFlow = MutableStateFlow<List<Conversation>>(emptyList())
-    private val usersFlow = MutableStateFlow<List<User>>(emptyList())
-    
-    init {
-        // Generate dummy data using your data models
-        val users = listOf(DataUtils.currentUser) + DataUtils.dummyUsers
-        usersFlow.value = users
-        
-        val conversations = DataUtils.generateDummyConversations()
-        conversationsFlow.value = conversations
-        
-        val messages = DataUtils.generateDummyMessages()
-        messagesFlow.value = messages
-    }
+    // Use SupabaseClient for cloud storage
+    private val messagesFlow = SupabaseClient.messagesFlow
+    private val conversationsFlow = SupabaseClient.conversationsFlow
+    private val usersFlow = SupabaseClient.usersFlow
     
     override fun getMessages(conversationId: String): Flow<List<Message>> {
         return messagesFlow.map { messages ->
@@ -127,13 +116,11 @@ class MessageRepositoryImpl : MessageRepository {
             isRead = false
         )
         
-        // Add the message to our collection
-        val currentMessages = messagesFlow.value.toMutableList()
-        currentMessages.add(newMessage)
-        messagesFlow.value = currentMessages
+        // Add the message to Supabase
+        SupabaseClient.addMessage(newMessage)
         
         // Update the conversation's last message details
-        updateConversationLastMessage(conversationId, newMessage.id, newMessage.timestamp)
+        SupabaseClient.updateConversationLastMessage(conversationId, newMessage.id, newMessage.timestamp)
         
         // Generate auto-reply with slight delay
         delay(800) // Simulate network delay
@@ -142,7 +129,7 @@ class MessageRepositoryImpl : MessageRepository {
         return newMessage
     }
     
-    private fun generateAutoReply(
+    private suspend fun generateAutoReply(
         conversationId: String,
         senderId: String,
         originalText: String,
@@ -185,34 +172,11 @@ class MessageRepositoryImpl : MessageRepository {
             isRead = true
         )
         
-        // Add reply to messages
-        val currentMessages = messagesFlow.value.toMutableList()
-        currentMessages.add(replyMessage)
-        messagesFlow.value = currentMessages
+        // Add reply to Supabase
+        SupabaseClient.addMessage(replyMessage)
         
         // Update conversation last message
-        updateConversationLastMessage(conversationId, replyMessage.id, replyMessage.timestamp)
-    }
-    
-    private fun updateConversationLastMessage(conversationId: String, messageId: String, timestamp: Long) {
-        val currentConversations = conversationsFlow.value.toMutableList()
-        val index = currentConversations.indexOfFirst { it.id == conversationId }
-        
-        if (index != -1) {
-            val conversation = currentConversations[index]
-            
-            // Create updated conversation with new last message info
-            val updatedConversation = conversation.copy(
-                lastMessageId = messageId,
-                lastMessageTime = timestamp,
-                // Increment unread count for recipient
-                unreadTwo = conversation.unreadTwo + 1 
-            )
-            
-            // Replace in the list
-            currentConversations[index] = updatedConversation
-            conversationsFlow.value = currentConversations
-        }
+        SupabaseClient.updateConversationLastMessage(conversationId, replyMessage.id, replyMessage.timestamp)
     }
 
     override suspend fun decryptMessage(message: Message, pin: String): String {
@@ -239,23 +203,7 @@ class MessageRepositoryImpl : MessageRepository {
     }
     
     override suspend fun markConversationAsRead(conversationId: String) {
-        val currentConversations = conversationsFlow.value.toMutableList()
-        val index = currentConversations.indexOfFirst { it.id == conversationId }
-        
-        if (index != -1) {
-            val conversation = currentConversations[index]
-            
-            // Update only if current user is participant one
-            if (conversation.participantOneId == DataUtils.currentUser.id) {
-                val updatedConversation = conversation.copy(unreadOne = 0)
-                currentConversations[index] = updatedConversation
-                conversationsFlow.value = currentConversations
-            } else {
-                val updatedConversation = conversation.copy(unreadTwo = 0)
-                currentConversations[index] = updatedConversation
-                conversationsFlow.value = currentConversations
-            }
-        }
+        SupabaseClient.markConversationAsRead(conversationId)
     }
     
     private fun generatePinHash(pin: String): String {

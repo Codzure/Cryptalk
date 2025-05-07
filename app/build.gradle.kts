@@ -60,21 +60,14 @@ dependencies {
     implementation(libs.circle.imageview)
 
     // Supabase (via BOM)
-    implementation(platform(libs.supabase.bom))
-    implementation(libs.supabase.auth)
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.realtime)
-    implementation(libs.supabase.storage)
-    implementation(libs.supabase.functions)
-    //implementation(libs.supabase.core)
+    implementation(libs.supabase.core)
     implementation(libs.koin)
     implementation(libs.lifecycle.common)
     implementation(libs.lifecycle.livedata)
     implementation(libs.lifecycle.runtime)
     implementation(libs.lifecycle.viewmodel)
-
-
-
 
     // Testing
     testImplementation(libs.junit)

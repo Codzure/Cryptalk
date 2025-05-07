@@ -88,7 +88,7 @@ class ChatViewModel(
         
         viewModelScope.launch {
             try {
-                val message = repository.sendMessage(
+                repository.sendMessage(
                     conversationId = conversationId!!,
                     recipientId = _recipient.value!!.id,
                     text = text,

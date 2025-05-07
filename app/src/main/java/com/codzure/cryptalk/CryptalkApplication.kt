@@ -1,6 +1,7 @@
 package com.codzure.cryptalk
 
 import android.app.Application
+
 import com.codzure.cryptalk.di.appModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -25,5 +26,9 @@ class CryptalkApplication : Application() {
             // Declare modules
             modules(appModule)
         }
+        
+        // Initialize SupabaseClient
+        // This will trigger the init block in SupabaseClient object
+        SupabaseClient
     }
 }
