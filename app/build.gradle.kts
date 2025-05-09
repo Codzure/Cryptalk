@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.androidx.navigation.safeargs)
 }
 
@@ -59,22 +60,16 @@ dependencies {
     implementation(libs.androidx.gridlayout)
     implementation(libs.circle.imageview)
 
-    // Supabase (via BOM)
-    implementation(platform(libs.supabase.bom))
-    implementation(libs.supabase.auth)
-    implementation(libs.supabase.postgrest)
-    implementation(libs.supabase.realtime)
-    implementation(libs.supabase.storage)
-    implementation(libs.supabase.functions)
-    //implementation(libs.supabase.core)
+    // Kotlin Serialization
+    implementation(libs.kotlinx.serialization.json)
+    
+    // Removed Supabase dependencies
+    
     implementation(libs.koin)
     implementation(libs.lifecycle.common)
     implementation(libs.lifecycle.livedata)
     implementation(libs.lifecycle.runtime)
     implementation(libs.lifecycle.viewmodel)
-
-
-
 
     // Testing
     testImplementation(libs.junit)

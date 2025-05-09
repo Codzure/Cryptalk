@@ -12,8 +12,8 @@ navigation = "2.8.9"
 gridlayout = "1.1.0"
 
 coroutines = "1.10.1"
-supabase = "3.1.4"
 circle-imageview = "3.1.0"
+kotlinx-serialization = "1.7.1"
 
 junit = "4.13.2"
 androidx-junit = "1.2.1"
@@ -26,6 +26,7 @@ androidx-navigation = "2.7.7"
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 androidx-navigation-safeargs = { id = "androidx.navigation.safeargs", version.ref = "navigation" }
 
 [libraries]
@@ -46,14 +47,10 @@ androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
-# Supabase (BOM-managed)
-supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabase" }
-supabase-auth = { module = "io.github.jan-tennert.supabase:auth-kt" }
-supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
-supabase-realtime = { module = "io.github.jan-tennert.supabase:realtime-kt" }
-supabase-storage = { module = "io.github.jan-tennert.supabase:storage-kt" }
-supabase-functions = { module = "io.github.jan-tennert.supabase:functions-kt" }
-supabase-core = { module = "io.github.jan-tennert.supabase:core-kt", version.ref = "supabase" }
+# Serialization
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+
+# Circle ImageView
 circle-imageview = { module = "de.hdodenhof:circleimageview", version.ref = "circle-imageview" }
 
 # Testing
