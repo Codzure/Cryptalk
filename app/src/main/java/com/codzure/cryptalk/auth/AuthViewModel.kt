@@ -48,24 +48,21 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
     /**
      * Registers a new user with the provided information.
      * 
-     * @param fullName The user's full name
-     * @param username The user's chosen username
+     * @param name The user's full name
      * @param email The user's email address
      * @param password The user's password
-     * @param profileImageUri Optional URI to the user's profile image
      */
     fun register(
-        fullName: String,
-        username: String,
+        name: String,
         email: String,
-        password: String,
-        profileImageUri: Uri? = null
+        password: String
     ) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             
-            userRepository.register(fullName, username, email, password, profileImageUri)
-                .onSuccess { _ ->
+            userRepository.register(name, email, password)
+                .onSuccess { user ->
+                    _currentUser.value = user
                     _authState.value = AuthState.Success
                 }
                 .onFailure { exception ->
@@ -81,15 +78,6 @@ class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
         userRepository.logout()
         _currentUser.value = null
         _authState.value = AuthState.Idle
-    }
-    
-    /**
-     * Checks if a user is currently logged in.
-     * 
-     * @return True if a user is logged in, false otherwise
-     */
-    fun isLoggedIn(): Boolean {
-        return userRepository.isLoggedIn()
     }
     
     /**

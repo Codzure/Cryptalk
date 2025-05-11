@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.transition)
+    implementation(libs.androidx.splashscreen)
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.activity)

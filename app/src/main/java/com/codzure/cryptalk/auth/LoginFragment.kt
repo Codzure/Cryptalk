@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.codzure.cryptalk.R
@@ -15,11 +16,11 @@ class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
-    
+
     private val viewModel: AuthViewModel by viewModel()
 
     override fun onCreateView(
-        inflater: LayoutInflater, 
+        inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
@@ -29,94 +30,101 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         setupListeners()
+        setupInputValidation()
         observeViewModel()
     }
-    
+
     private fun setupListeners() {
-        // Navigate to register screen
+        // Login button
+        binding.btnLogin.setOnClickListener {
+            if (validateInputs()) {
+                val email = binding.etEmail.text.toString()
+                val password = binding.etPassword.text.toString()
+                
+                viewModel.login(email, password)
+                
+                // Show loading state
+                binding.btnLogin.isEnabled = false
+                binding.btnLogin.text = "SIGNING IN..."
+            }
+        }
+
+        // Navigate to Registration
         binding.tvRegister.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
         }
-        
-        // Handle login button click
-        binding.btnLogin.setOnClickListener {
-            val email = binding.etEmail.text.toString().trim()
-            val password = binding.etPassword.text.toString().trim()
-            
-            if (validateInputs(email, password)) {
-                // Show loading state
-                setLoading(true)
-                
-                // Attempt login
-                viewModel.login(email, password)
-            }
-        }
-        
-        // Handle forgot password
+
+        // Forgot password
         binding.tvForgotPassword.setOnClickListener {
-            // TODO: Implement forgot password functionality
-            Toast.makeText(context, "Forgot password feature coming soon", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                "Password reset functionality will be implemented soon",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
-    
+
+    private fun setupInputValidation() {
+        // Email validation
+        binding.etEmail.doOnTextChanged { text, _, _, _ ->
+            binding.tilEmail.error = when {
+                text.isNullOrBlank() -> "Email is required"
+                !isValidEmail(text.toString()) -> "Enter a valid email address"
+                else -> null
+            }
+        }
+
+        // Password validation
+        binding.etPassword.doOnTextChanged { text, _, _, _ ->
+            binding.tilPassword.error = when {
+                text.isNullOrBlank() -> "Password is required"
+                text.length < 6 -> "Password must be at least 6 characters"
+                else -> null
+            }
+        }
+    }
+
     private fun observeViewModel() {
-        // Observe authentication state
         viewModel.authState.observe(viewLifecycleOwner) { state ->
-            setLoading(false)
-            
             when (state) {
+                is AuthState.Idle -> {
+                    binding.btnLogin.isEnabled = true
+                    binding.btnLogin.text = "SIGN IN"
+                }
+                is AuthState.Loading -> {
+                    binding.btnLogin.isEnabled = false
+                    binding.btnLogin.text = "SIGNING IN..."
+                }
                 is AuthState.Success -> {
-                    // Navigate to chats list
+                    binding.btnLogin.isEnabled = true
+                    binding.btnLogin.text = "SIGN IN"
+                    
                     findNavController().navigate(R.id.action_loginFragment_to_chatsListFragment)
                 }
                 is AuthState.Error -> {
-                    Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
-                }
-                else -> {
-                    // Do nothing for loading state as it's handled by setLoading
+                    binding.btnLogin.isEnabled = true
+                    binding.btnLogin.text = "SIGN IN"
+                    Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
-    
-    private fun validateInputs(email: String, password: String): Boolean {
-        var isValid = true
-        
-        // Validate email
-        if (email.isBlank()) {
-            binding.tilEmail.error = "Email is required"
-            isValid = false
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            binding.tilEmail.error = "Invalid email format"
-            isValid = false
-        } else {
-            binding.tilEmail.error = null
-        }
-        
-        // Validate password
-        if (password.isBlank()) {
-            binding.tilPassword.error = "Password is required"
-            isValid = false
-        } else if (password.length < 6) {
-            binding.tilPassword.error = "Password must be at least 6 characters"
-            isValid = false
-        } else {
-            binding.tilPassword.error = null
-        }
-        
-        return isValid
+
+    private fun validateInputs(): Boolean {
+        val emailValid = isValidEmail(binding.etEmail.text.toString())
+        val passwordValid = binding.etPassword.text.toString().isNotBlank()
+
+        // Show errors for invalid fields
+        if (!emailValid) binding.tilEmail.error = "Enter a valid email address"
+        if (!passwordValid) binding.tilPassword.error = "Password is required"
+
+        return emailValid && passwordValid
     }
-    
-    private fun setLoading(isLoading: Boolean) {
-        if (isLoading) {
-            binding.btnLogin.isEnabled = false
-            binding.btnLogin.text = "Signing in..."
-        } else {
-            binding.btnLogin.isEnabled = true
-            binding.btnLogin.text = "SIGN IN"
-        }
+
+    private fun isValidEmail(email: String): Boolean {
+        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
     override fun onDestroyView() {

@@ -54,19 +54,15 @@ class UserRepository(private val context: Context) {
     /**
      * Registers a new user with the provided information.
      * 
-     * @param fullName User's full name
-     * @param username User's chosen username
+     * @param name User's full name
      * @param email User's email address
      * @param password User's password
-     * @param profileImageUri Optional URI to the user's profile image
      * @return Result containing the registered user data on success or error message on failure
      */
     suspend fun register(
-        fullName: String,
-        username: String,
+        name: String,
         email: String,
-        password: String,
-        profileImageUri: Uri? = null
+        password: String
     ): Result<User> = withContext(Dispatchers.IO) {
         try {
             // TODO: Replace with actual registration implementation
@@ -79,12 +75,13 @@ class UserRepository(private val context: Context) {
             val userId = UUID.randomUUID().toString()
             val user = User(
                 id = userId,
-                fullName = fullName,
-                username = username,
                 email = email,
-                // In a real implementation, you would upload the image and get a URL
-                profileImageUrl = profileImageUri?.toString()
+                username = email.substringBefore('@'),
+                fullName = name
             )
+            
+            // Save the registered user
+            saveCurrentUser(user)
             
             Result.success(user)
         } catch (e: Exception) {
@@ -93,14 +90,14 @@ class UserRepository(private val context: Context) {
     }
     
     /**
-     * Logs out the current user.
+     * Logs out the current user by clearing saved user data.
      */
     fun logout() {
         prefs.edit().remove(KEY_CURRENT_USER).apply()
     }
     
     /**
-     * Gets the currently logged-in user, if any.
+     * Gets the currently logged in user, if any.
      * 
      * @return The current user or null if no user is logged in
      */
@@ -111,15 +108,6 @@ class UserRepository(private val context: Context) {
         } catch (e: Exception) {
             null
         }
-    }
-    
-    /**
-     * Checks if a user is currently logged in.
-     * 
-     * @return True if a user is logged in, false otherwise
-     */
-    fun isLoggedIn(): Boolean {
-        return getCurrentUser() != null
     }
     
     /**

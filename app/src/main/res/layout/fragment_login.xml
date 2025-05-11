@@ -29,7 +29,8 @@
         android:src="@drawable/ic_launcher_foreground"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/auth_primary" />
 
     <TextView
         android:id="@+id/tv_app_name"
@@ -37,7 +38,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Cryptalk"
-        android:textColor="@android:color/black"
+        android:textColor="@color/auth_text_primary"
         android:textSize="28sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
@@ -51,7 +52,7 @@
         android:layout_marginTop="8dp"
         android:gravity="center"
         android:text="Secure messaging for everyone"
-        android:textColor="#757575"
+        android:textColor="@color/auth_text_secondary"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="@id/guideline_end"
         app:layout_constraintStart_toStartOf="@id/guideline_start"
@@ -80,7 +81,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:text="Login"
-                android:textColor="@android:color/black"
+                android:textColor="@color/auth_text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -91,7 +92,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:hint="Email"
-                app:startIconDrawable="@android:drawable/ic_dialog_email">
+                app:errorEnabled="true"
+                app:startIconDrawable="@android:drawable/ic_dialog_email"
+                app:startIconTint="@color/auth_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_email"
@@ -108,7 +111,10 @@
                 android:layout_marginBottom="16dp"
                 android:hint="Password"
                 app:endIconMode="password_toggle"
-                app:startIconDrawable="@android:drawable/ic_lock_idle_lock">
+                app:endIconTint="@color/auth_primary"
+                app:errorEnabled="true"
+                app:startIconDrawable="@android:drawable/ic_lock_idle_lock"
+                app:startIconTint="@color/auth_primary">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_password"
@@ -122,7 +128,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="8dp"
-                android:backgroundTint="#5E35B1"
+                android:backgroundTint="@color/auth_primary"
                 android:text="SIGN IN"
                 android:textSize="16sp"
                 app:cornerRadius="28dp" />
@@ -134,7 +140,7 @@
                 android:layout_gravity="center"
                 android:layout_marginTop="16dp"
                 android:text="Forgot Password?"
-                android:textColor="#5E35B1"
+                android:textColor="@color/auth_primary"
                 android:textSize="14sp" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -145,7 +151,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:text="Don't have an account?"
-        android:textColor="#757575"
+        android:textColor="@color/auth_text_secondary"
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -157,7 +163,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="REGISTER"
-        android:textColor="#5E35B1"
+        android:textColor="@color/auth_primary"
         android:textSize="16sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
