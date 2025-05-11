@@ -1,6 +1,25 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.Cryptalk" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/auth_primary</item>
+        <item name="colorPrimaryVariant">@color/auth_primary_dark</item>
+        <item name="colorOnPrimary">@color/text_light</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/auth_accent</item>
+        <item name="colorOnSecondary">@color/text_light</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/auth_primary_dark</item>
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/auth_text_primary</item>
+        <item name="android:textColorSecondary">@color/auth_text_secondary</item>
+    </style>
 
+    <!-- Splash screen theme. -->
+    <style name="Theme.Cryptalk.SplashScreen" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/auth_primary</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+        <item name="windowSplashScreenAnimationDuration">800</item>
+        <item name="postSplashScreenTheme">@style/Theme.Cryptalk</item>
     </style>
 </resources>

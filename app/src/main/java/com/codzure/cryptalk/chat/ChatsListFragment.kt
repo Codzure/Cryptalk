@@ -1,14 +1,14 @@
 package com.codzure.cryptalk.chat
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.codzure.cryptalk.R
 import com.codzure.cryptalk.adapters.ConversationsAdapter
+import com.codzure.cryptalk.auth.AuthViewModel
 import com.codzure.cryptalk.databinding.FragmentChatsListBinding
 import com.codzure.cryptalk.models.ConversationUI
 import com.codzure.cryptalk.viewmodels.ChatsListViewModel
@@ -22,8 +22,14 @@ class ChatsListFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: ConversationsAdapter
     
-    // Inject ViewModel with Koin
+    // Inject ViewModels with Koin
     private val viewModel: ChatsListViewModel by viewModel()
+    private val authViewModel: AuthViewModel by viewModel()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true) // Enable options menu
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -38,6 +44,35 @@ class ChatsListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
         observeViewModel()
+        
+        // Update UI with current user info
+        authViewModel.currentUser.observe(viewLifecycleOwner) { user ->
+            user?.let {
+                // Set toolbar title to include username if available
+                activity?.title = "Chats (${it.displayName()})"
+            }
+        }
+    }
+    
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.toolbar_menu, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+    
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_logout -> {
+                handleLogout()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    
+    private fun handleLogout() {
+        authViewModel.logout()
+        // Navigate back to login screen
+        findNavController().navigate(R.id.action_chatsListFragment_to_loginFragment)
     }
     
     private fun observeViewModel() {

@@ -13,4 +13,12 @@
     <color name="bubble_self_background">#DCF8C6</color>
     <color name="bubble_self_background_2">#E1F5FE</color>
 
+    <!-- Authentication colors -->
+    <color name="auth_primary">#5E35B1</color>
+    <color name="auth_primary_dark">#4527A0</color>
+    <color name="auth_accent">#7B1FA2</color>
+    <color name="auth_text_primary">#212121</color>
+    <color name="auth_text_secondary">#757575</color>
+    <color name="auth_success">#4CAF50</color>
+    <color name="auth_warning">#FFC107</color>
 </resources>
