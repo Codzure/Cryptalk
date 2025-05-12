@@ -27,26 +27,41 @@
             android:layout_height="wrap_content"
             android:text="@string/app_name"
             android:accessibilityHeading="true" />
+
+        <TextView
+            android:id="@+id/toolbarSubtitle"
+            style="@style/ToolbarSubtitleTextAppearance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:text="+254 712 345 678"
+            tools:visibility="visible" />
     </com.google.android.material.appbar.MaterialToolbar>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/messageList"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:descendantFocusability="beforeDescendants"
-        android:focusableInTouchMode="true"
-        android:paddingBottom="@dimen/spacing_small"
-        android:transcriptMode="alwaysScroll"
-        android:scrollbars="vertical"
-        android:fadeScrollbars="true"
-        android:contentDescription="@string/message_list_description"
         app:layout_constraintBottom_toTopOf="@+id/container"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/toolbar"
-        tools:itemCount="5"
-        tools:listitem="@layout/item_message_bubble" />
+        app:layout_constraintTop_toBottomOf="@+id/toolbar">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/messageList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:descendantFocusability="beforeDescendants"
+            android:focusableInTouchMode="true"
+            android:paddingBottom="@dimen/spacing_small"
+            android:transcriptMode="alwaysScroll"
+            android:scrollbars="vertical"
+            android:fadeScrollbars="true"
+            android:contentDescription="@string/message_list_description"
+            tools:itemCount="5"
+            tools:listitem="@layout/item_message_bubble" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
         
     <!-- Loading Indicator -->
     <ProgressBar
@@ -112,6 +127,17 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/sendButton"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <ProgressBar
+            android:id="@+id/sendProgressIndicator"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@id/sendButton"
+            app:layout_constraintEnd_toEndOf="@id/sendButton"
+            app:layout_constraintStart_toStartOf="@id/sendButton"
+            app:layout_constraintTop_toTopOf="@id/sendButton" />
 
         <ImageButton
             android:id="@+id/sendButton"

@@ -2,6 +2,7 @@ package com.codzure.cryptalk
 
 import android.app.Application
 import com.codzure.cryptalk.di.appModule
+import com.codzure.cryptalk.di.networkModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -23,7 +24,7 @@ class CryptalkApplication : Application() {
             // Declare Android context
             androidContext(this@CryptalkApplication)
             // Declare modules
-            modules(appModule)
+            modules(listOf(appModule, networkModule))
         }
     }
 }

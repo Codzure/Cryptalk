@@ -45,11 +45,12 @@ class RegisterFragment : Fragment() {
         // Register button click
         binding.btnRegister.setOnClickListener {
             if (validateInputs()) {
-                val name = binding.etName.text.toString()
-                val email = binding.etEmail.text.toString()
+                val fullName = binding.etName.text.toString().trim()
+                val phoneNumber = binding.etPhoneNumber.text.toString().trim()
+                val email = binding.etEmail.text.toString().trim().ifBlank { null }
                 val password = binding.etPassword.text.toString()
 
-                viewModel.register(name, email, password)
+                viewModel.register(fullName, phoneNumber, email, password)
                 
                 // Show loading state
                 binding.btnRegister.isEnabled = false
@@ -63,14 +64,21 @@ class RegisterFragment : Fragment() {
         binding.etName.doOnTextChanged { text, _, _, _ ->
             binding.tilName.error = if (text.isNullOrBlank()) "Name is required" else null
         }
-
-        // Email validation
-        binding.etEmail.doOnTextChanged { text, _, _, _ ->
-            binding.tilEmail.error = when {
-                text.isNullOrBlank() -> "Email is required"
-                !isValidEmail(text.toString()) -> "Enter a valid email address"
+        
+        // Phone number validation
+        binding.etPhoneNumber.doOnTextChanged { text, _, _, _ ->
+            binding.tilPhoneNumber.error = when {
+                text.isNullOrBlank() -> "Phone number is required"
+                !isValidPhoneNumber(text.toString()) -> "Enter a valid phone number"
                 else -> null
             }
+        }
+
+        // Email validation (optional)
+        binding.etEmail.doOnTextChanged { text, _, _, _ ->
+            binding.tilEmail.error = if (!text.isNullOrBlank() && !isValidEmail(text.toString())) {
+                "Enter a valid email address"
+            } else null
         }
 
         // Password validation
@@ -115,7 +123,6 @@ class RegisterFragment : Fragment() {
                     binding.btnRegister.isEnabled = true
                     binding.btnRegister.text = "CREATE ACCOUNT"
                     
-                    // Navigate to chat list after successful registration
                     findNavController().navigate(R.id.action_registerFragment_to_chatsListFragment)
                 }
                 is AuthState.Error -> {
@@ -129,21 +136,29 @@ class RegisterFragment : Fragment() {
 
     private fun validateInputs(): Boolean {
         val nameValid = binding.etName.text.toString().isNotBlank()
-        val emailValid = isValidEmail(binding.etEmail.text.toString())
+        val phoneNumberValid = isValidPhoneNumber(binding.etPhoneNumber.text.toString())
+        val emailText = binding.etEmail.text.toString()
+        val emailValid = emailText.isBlank() || isValidEmail(emailText)
         val passwordValid = binding.etPassword.text.toString().length >= 6
-        val passwordsMatch = binding.etPassword.text.toString() == binding.etConfirmPassword.text.toString()
+        val confirmPasswordValid = binding.etPassword.text.toString() == binding.etConfirmPassword.text.toString()
 
         // Show errors for invalid fields
         if (!nameValid) binding.tilName.error = "Name is required"
+        if (!phoneNumberValid) binding.tilPhoneNumber.error = "Enter a valid phone number"
         if (!emailValid) binding.tilEmail.error = "Enter a valid email address"
         if (!passwordValid) binding.tilPassword.error = "Password must be at least 6 characters"
-        if (!passwordsMatch) binding.tilConfirmPassword.error = "Passwords don't match"
+        if (!confirmPasswordValid) binding.tilConfirmPassword.error = "Passwords don't match"
 
-        return nameValid && emailValid && passwordValid && passwordsMatch
+        return nameValid && phoneNumberValid && emailValid && passwordValid && confirmPasswordValid
     }
 
     private fun isValidEmail(email: String): Boolean {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+    
+    private fun isValidPhoneNumber(phoneNumber: String): Boolean {
+        // Basic validation - checks if it's 10-12 digits
+        return phoneNumber.trim().matches(Regex("\\d{10,12}"))
     }
 
     override fun onDestroyView() {

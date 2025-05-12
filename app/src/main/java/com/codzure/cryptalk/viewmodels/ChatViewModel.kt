@@ -2,8 +2,8 @@ package com.codzure.cryptalk.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.codzure.cryptalk.api.ChatRepository
 import com.codzure.cryptalk.data.Message
-import com.codzure.cryptalk.data.MessageRepository
 import com.codzure.cryptalk.data.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
  * Handles loading and managing messages for a specific conversation
  */
 class ChatViewModel(
-    private val repository: MessageRepository
+    private val repository: ChatRepository
 ) : ViewModel() {
     
     // UI State
@@ -24,6 +24,10 @@ class ChatViewModel(
     
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+    
+    // Message sending state
+    private val _messageSendingState = MutableStateFlow(MessageSendState.IDLE)
+    val messageSendingState: StateFlow<MessageSendState> = _messageSendingState.asStateFlow()
     
     // Messages data
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
@@ -36,42 +40,89 @@ class ChatViewModel(
     // Current conversation ID
     private var conversationId: String? = null
     
+    // Current user ID (from repository)
+    private var currentUserId: String? = null
+    
+    init {
+        // Get current user ID from repository
+        val user = repository.getCurrentUser()
+        currentUserId = user?.id ?: "current-user-id"
+    }
+    
     /**
-     * Load conversation and messages for a specific recipient
+     * Load conversation and messages for a specific conversation ID and recipient
      */
-    fun loadConversation(recipientId: String) {
+    fun loadConversation(conversationId: String, recipient: User) {
+        this.conversationId = conversationId
+        _recipient.value = recipient
+        
         viewModelScope.launch {
             _isLoading.value = true
             
             try {
-                // Load recipient user data
-                val user = repository.getUserById(recipientId)
-                _recipient.value = user
+                // Get messages for this conversation
+                val result = repository.getMessages(conversationId)
                 
-                // Find conversation ID - in a real app this would be more robust
-                repository.getConversations().collect { conversations ->
-                    // Look for conversation with this recipient
-                    val conversation = conversations.find { conv ->
-                        conv.participantOneId == recipientId || conv.participantTwoId == recipientId
-                    }
+                if (result.isSuccess) {
+                    val messagesList = result.getOrNull() ?: emptyList()
+                    _messages.value = messagesList
                     
-                    if (conversation != null) {
-                        conversationId = conversation.id
-                        // Mark conversation as read
-                        repository.markConversationAsRead(conversation.id)
-                        
-                        // Load messages for this conversation
-                        repository.getMessages(conversation.id).collect { messagesList ->
-                            _messages.value = messagesList
-                            _isLoading.value = false
-                        }
-                    } else {
-                        _error.value = "Conversation not found"
-                        _isLoading.value = false
+                    // Mark unread messages as read
+                    val unreadMessageIds = messagesList
+                        .filter { !it.isRead && it.recipientId == getCurrentUserId() }
+                        .map { it.id }
+                    
+                    if (unreadMessageIds.isNotEmpty()) {
+                        repository.markMessagesAsRead(conversationId, unreadMessageIds)
                     }
+                } else {
+                    _error.value = "Failed to load messages: ${result.exceptionOrNull()?.message}"
                 }
             } catch (e: Exception) {
                 _error.value = "Failed to load conversation: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+    
+    /**
+     * Create a new conversation with a user ID and load it
+     * This is for backward compatibility with the previous implementation
+     */
+    fun createConversationByUserId(userId: String, recipientName: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            
+            try {
+                // Try to create a conversation with this user
+                val result = repository.createConversation(userId)
+                
+                if (result.isSuccess) {
+                    val conversation = result.getOrNull()
+                    if (conversation != null) {
+                        // Create a temporary user object for the recipient
+                        val tempUser = User(
+                            id = userId,
+                            fullName = recipientName,
+                            phoneNumber = "",
+                            email = "",
+                            username = "",
+                            avatarUrl = null
+                        )
+                        
+                        // Load the conversation
+                        loadConversation(conversation.conversation.id, tempUser)
+                    } else {
+                        _error.value = "Failed to create conversation"
+                        _isLoading.value = false
+                    }
+                } else {
+                    _error.value = "Failed to create conversation: ${result.exceptionOrNull()?.message}"
+                    _isLoading.value = false
+                }
+            } catch (e: Exception) {
+                _error.value = "Failed to create conversation: ${e.message}"
                 _isLoading.value = false
             }
         }
@@ -80,41 +131,125 @@ class ChatViewModel(
     /**
      * Send a new message in the current conversation
      */
-    fun sendMessage(text: String, encrypt: Boolean = false, pin: String? = null) {
+    fun sendMessage(text: String, pin: String? = null) {
         if (conversationId == null || _recipient.value == null) {
             _error.value = "Conversation not initialized"
             return
         }
         
         viewModelScope.launch {
+            _messageSendingState.value = MessageSendState.SENDING
+            
             try {
-                val message = repository.sendMessage(
+                val result = repository.sendMessage(
                     conversationId = conversationId!!,
                     recipientId = _recipient.value!!.id,
                     text = text,
-                    encrypt = encrypt,
-                    pin = pin
+                    pinHash = pin
                 )
                 
-                // Message will be updated via flow collection
+                if (result.isSuccess) {
+                    _messageSendingState.value = MessageSendState.SUCCESS
+                    // Refresh messages to include the new one
+                    loadMessagesFromRepository()
+                } else {
+                    _error.value = "Failed to send message: ${result.exceptionOrNull()?.message}"
+                    _messageSendingState.value = MessageSendState.ERROR
+                }
             } catch (e: Exception) {
                 _error.value = "Failed to send message: ${e.message}"
+                _messageSendingState.value = MessageSendState.ERROR
             }
         }
     }
     
     /**
-     * Decrypt a message using a provided PIN
+     * Decrypt a message with a PIN
      */
-    fun decryptMessage(message: Message, pin: String, onDecrypted: (String) -> Unit) {
+    fun decryptMessage(message: Message, pin: String, callback: (String?, Boolean) -> Unit) {
+        if (message.pinHash == null) {
+            callback("This message is not encrypted", false)
+            return
+        }
+        
         viewModelScope.launch {
             try {
-                val decryptedText = repository.decryptMessage(message, pin)
-                onDecrypted(decryptedText)
+                // For security, we'd typically handle decryption on the server
+                // This is a simplified implementation
+                
+                // Here we're treating the pinHash not as a true hash but as a PIN
+                // In a real app, this would be a proper cryptographic operation
+                if (message.pinHash == pin) {
+                    callback(message.encodedText, true)
+                } else {
+                    callback(null, false)
+                }
             } catch (e: Exception) {
-                _error.value = "Decryption failed: ${e.message}"
+                callback("Error decrypting message: ${e.message}", false)
             }
         }
+    }
+    
+    /**
+     * Refreshes messages from the repository
+     * @param silent If true, does not show loading indicators
+     */
+    fun refreshMessages(silent: Boolean = false) {
+        if (conversationId == null) {
+            _error.value = "Conversation not initialized"
+            return
+        }
+        
+        loadMessagesFromRepository(refresh = true, silent = silent)
+    }
+    
+    /**
+     * Load messages from the repository
+     * @param refresh Force a refresh from the server
+     * @param silent If true, does not show loading indicators
+     */
+    private fun loadMessagesFromRepository(refresh: Boolean = false, silent: Boolean = false) {
+        if (conversationId == null) return
+        
+        viewModelScope.launch {
+            if (!silent) {
+                _isLoading.value = true
+            }
+            
+            try {
+                val result = repository.getMessages(conversationId!!, refresh)
+                
+                if (result.isSuccess) {
+                    _messages.value = result.getOrNull() ?: emptyList()
+                    
+                    // Mark unread messages as read
+                    val unreadMessageIds = _messages.value
+                        .filter { !it.isRead && it.recipientId == getCurrentUserId() }
+                        .map { it.id }
+                    
+                    if (unreadMessageIds.isNotEmpty()) {
+                        repository.markMessagesAsRead(conversationId!!, unreadMessageIds)
+                    }
+                } else if (!silent) {
+                    _error.value = "Failed to load messages: ${result.exceptionOrNull()?.message}"
+                }
+            } catch (e: Exception) {
+                if (!silent) {
+                    _error.value = "Failed to load messages: ${e.message}"
+                }
+            } finally {
+                if (!silent) {
+                    _isLoading.value = false
+                }
+            }
+        }
+    }
+    
+    /**
+     * Get the current user ID
+     */
+    fun getCurrentUserId(): String {
+        return currentUserId ?: "current-user-id"
     }
     
     /**
@@ -122,5 +257,23 @@ class ChatViewModel(
      */
     fun clearError() {
         _error.value = null
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        // Clear message cache for this conversation when ViewModel is cleared
+        if (conversationId != null) {
+            repository.clearMessageCache(conversationId)
+        }
+    }
+    
+    /**
+     * Possible states for message sending
+     */
+    enum class MessageSendState {
+        IDLE,
+        SENDING,
+        SUCCESS,
+        ERROR
     }
 }

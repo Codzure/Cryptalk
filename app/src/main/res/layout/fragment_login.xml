@@ -86,21 +86,23 @@
                 android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_email"
+                android:id="@+id/til_phone_number"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:hint="Email"
+                android:hint="Phone Number"
                 app:errorEnabled="true"
-                app:startIconDrawable="@android:drawable/ic_dialog_email"
-                app:startIconTint="@color/auth_primary">
+                app:startIconDrawable="@android:drawable/ic_menu_call"
+                app:startIconTint="@color/auth_primary"
+                app:prefixText="+">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_email"
+                    android:id="@+id/et_phone_number"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textEmailAddress" />
+                    android:inputType="phone" 
+                    android:maxLength="12"/>
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout

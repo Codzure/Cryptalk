@@ -14,7 +14,8 @@ data class Message(
     @SerialName("encoded_text") val encodedText: String,
     @SerialName("pin_hash") val pinHash: String? = null,
     @SerialName("timestamp") val timestamp: Long = System.currentTimeMillis(),
-    @SerialName("is_read") val isRead: Boolean = false
+    @SerialName("is_read") val isRead: Boolean = false,
+    @SerialName("is_delivered") val isDelivered: Boolean = false
 )
 
 
@@ -27,5 +28,6 @@ recipient_id uuid references users(id) on delete cascade,
 encoded_text text not null,
 pin_hash text,
 timestamp bigint default (extract(epoch from now()) * 1000)::bigint,
-is_read boolean default false
+is_read boolean default false,
+is_delivered boolean default false
 );*/

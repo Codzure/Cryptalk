@@ -1,4 +1,4 @@
-package com.codzure.cryptalk.auth
+package com.codzure.cryptalk.extensions
 
 import kotlinx.serialization.Serializable
 
@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * This model is used for authentication and user profile management.
  */
 @Serializable
-data class User(
+data class UserExt(
     val id: String = "",
     val fullName: String = "",
     val username: String = "",
@@ -27,7 +27,7 @@ data class User(
             else -> "Unknown User"
         }
     }
-    
+
     /**
      * Returns the initial letters for the user's avatar (if no profile image is available).
      * Extracts up to 2 initials from the full name, or uses the first letter of the username/email.

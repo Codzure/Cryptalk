@@ -68,11 +68,17 @@ app:startDestination="@id/loginFragment">
     tools:layout="@layout/fragment_chat" >
 
     <argument
-        android:name="userId"
+        android:name="conversationId"
         app:argType="string" />
 
     <argument
         android:name="senderName"
-        app:argType="string" />
+        app:argType="string"
+        app:nullable="true" />
+        
+    <argument
+        android:name="userId"
+        app:argType="string"
+        app:nullable="true" />
 </fragment>
 </navigation>

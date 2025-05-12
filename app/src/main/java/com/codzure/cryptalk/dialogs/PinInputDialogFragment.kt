@@ -11,7 +11,8 @@ import android.widget.Toast
 import androidx.fragment.app.DialogFragment
 import com.codzure.cryptalk.R
 import com.codzure.cryptalk.databinding.DialogPinInputBinding
-import com.codzure.cryptalk.extensions.hideKeyboard
+// Use a specific import to avoid ambiguity
+import com.codzure.cryptalk.extensions.hideKeyboard as hideKeyboardExt
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 enum class PinMode { ENCRYPT, DECRYPT }
@@ -76,7 +77,7 @@ class PinInputDialogFragment(
             if (isValidPin(pin)) {
                 onPinEntered(pin)
                 dismiss()
-                hideKeyboard()
+                hideKeyboardExt()
             } else {
                 Toast.makeText(requireContext(), "PIN must be 4 digits", Toast.LENGTH_SHORT).show()
             }
@@ -87,7 +88,7 @@ class PinInputDialogFragment(
             if (isValidPin(pin)) {
                 onPinEntered(pin)
                 dismiss()
-                hideKeyboard()
+                hideKeyboardExt()
             } else {
                 Toast.makeText(requireContext(), "PIN must be 4 digits", Toast.LENGTH_SHORT).show()
             }
@@ -95,7 +96,7 @@ class PinInputDialogFragment(
 
         binding.btnCancel.setOnClickListener {
             dismiss()
-            hideKeyboard()
+            hideKeyboardExt()
         }
 
         return Dialog(requireContext(), R.style.DialogSlideAnim).apply {

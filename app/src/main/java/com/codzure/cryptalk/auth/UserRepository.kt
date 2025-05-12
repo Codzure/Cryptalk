@@ -2,7 +2,7 @@ package com.codzure.cryptalk.auth
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.net.Uri
+import com.codzure.cryptalk.extensions.UserExt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -25,7 +25,7 @@ class UserRepository(private val context: Context) {
      * @param password User's password
      * @return Result containing user data on success or error message on failure
      */
-    suspend fun login(email: String, password: String): Result<User> = withContext(Dispatchers.IO) {
+    suspend fun login(email: String, password: String): Result<UserExt> = withContext(Dispatchers.IO) {
         try {
             // TODO: Replace with actual authentication implementation
             
@@ -35,7 +35,7 @@ class UserRepository(private val context: Context) {
             // For testing purposes, we're "authenticating" any credentials
             // In a real app, you'd validate against your auth provider
             val userId = UUID.randomUUID().toString()
-            val user = User(
+            val user = UserExt(
                 id = userId,
                 email = email,
                 username = email.substringBefore('@'),
@@ -63,7 +63,7 @@ class UserRepository(private val context: Context) {
         name: String,
         email: String,
         password: String
-    ): Result<User> = withContext(Dispatchers.IO) {
+    ): Result<UserExt> = withContext(Dispatchers.IO) {
         try {
             // TODO: Replace with actual registration implementation
             
@@ -73,7 +73,7 @@ class UserRepository(private val context: Context) {
             // For testing purposes, we're creating a user locally
             // In a real app, you'd register with your auth provider
             val userId = UUID.randomUUID().toString()
-            val user = User(
+            val user = UserExt(
                 id = userId,
                 email = email,
                 username = email.substringBefore('@'),
@@ -101,10 +101,10 @@ class UserRepository(private val context: Context) {
      * 
      * @return The current user or null if no user is logged in
      */
-    fun getCurrentUser(): User? {
+    fun getCurrentUser(): UserExt? {
         val userJson = prefs.getString(KEY_CURRENT_USER, null) ?: return null
         return try {
-            json.decodeFromString<User>(userJson)
+            json.decodeFromString<UserExt>(userJson)
         } catch (e: Exception) {
             null
         }
@@ -115,7 +115,7 @@ class UserRepository(private val context: Context) {
      * 
      * @param user The user to save
      */
-    private fun saveCurrentUser(user: User) {
+    private fun saveCurrentUser(user: UserExt) {
         val userJson = json.encodeToString(user)
         prefs.edit().putString(KEY_CURRENT_USER, userJson).apply()
     }

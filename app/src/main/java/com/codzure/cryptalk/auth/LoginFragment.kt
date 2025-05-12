@@ -40,10 +40,10 @@ class LoginFragment : Fragment() {
         // Login button
         binding.btnLogin.setOnClickListener {
             if (validateInputs()) {
-                val email = binding.etEmail.text.toString()
+                val phoneNumber = binding.etPhoneNumber.text.toString().trim()
                 val password = binding.etPassword.text.toString()
                 
-                viewModel.login(email, password)
+                viewModel.login(phoneNumber, password)
                 
                 // Show loading state
                 binding.btnLogin.isEnabled = false
@@ -67,11 +67,11 @@ class LoginFragment : Fragment() {
     }
 
     private fun setupInputValidation() {
-        // Email validation
-        binding.etEmail.doOnTextChanged { text, _, _, _ ->
-            binding.tilEmail.error = when {
-                text.isNullOrBlank() -> "Email is required"
-                !isValidEmail(text.toString()) -> "Enter a valid email address"
+        // Phone number validation
+        binding.etPhoneNumber.doOnTextChanged { text, _, _, _ ->
+            binding.tilPhoneNumber.error = when {
+                text.isNullOrBlank() -> "Phone number is required"
+                !isValidPhoneNumber(text.toString()) -> "Enter a valid phone number"
                 else -> null
             }
         }
@@ -113,18 +113,20 @@ class LoginFragment : Fragment() {
     }
 
     private fun validateInputs(): Boolean {
-        val emailValid = isValidEmail(binding.etEmail.text.toString())
+        val phoneNumberValid = isValidPhoneNumber(binding.etPhoneNumber.text.toString())
         val passwordValid = binding.etPassword.text.toString().isNotBlank()
 
         // Show errors for invalid fields
-        if (!emailValid) binding.tilEmail.error = "Enter a valid email address"
+        if (!phoneNumberValid) binding.tilPhoneNumber.error = "Enter a valid phone number"
         if (!passwordValid) binding.tilPassword.error = "Password is required"
 
-        return emailValid && passwordValid
+        return phoneNumberValid && passwordValid
     }
 
-    private fun isValidEmail(email: String): Boolean {
-        return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    private fun isValidPhoneNumber(phoneNumber: String): Boolean {
+        // Basic validation - should be improved based on your requirements
+        // This just checks if it's 10-12 digits
+        return phoneNumber.trim().matches(Regex("\\d{10,12}"))
     }
 
     override fun onDestroyView() {
