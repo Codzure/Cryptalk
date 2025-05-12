@@ -42,10 +42,6 @@ data class ImageData(
     val url: String
 )
 
-// Conversation and Message classes are now defined in their own files:
-// - Conversation.kt
-// - Message.kt
-
 /**
  * Request to create a new conversation
  */
