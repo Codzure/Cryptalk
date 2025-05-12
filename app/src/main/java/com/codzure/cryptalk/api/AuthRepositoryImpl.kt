@@ -2,23 +2,23 @@ package com.codzure.cryptalk.api
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.codzure.cryptalk.data.LoginRequest
+import com.codzure.cryptalk.data.RegisterRequest
 import com.codzure.cryptalk.data.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import retrofit2.Response
 import java.io.IOException
 
 /**
  * Implementation of the AuthRepository interface for handling authentication operations.
  */
 class AuthRepositoryImpl(
-    private val authApiService: AuthApiService,
+    private val apiService: ApiService,
     private val context: Context
-) : AuthRepository(authApiService, context) {
-    
+) : AuthRepository(apiService, context) {
+
     companion object {
         private const val PREFS_NAME = "cryptalk_prefs"
         private const val KEY_AUTH_TOKEN = "auth_token"
@@ -26,7 +26,8 @@ class AuthRepositoryImpl(
         private const val KEY_USER_ID = "user_id"
     }
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
 
     /**
@@ -36,32 +37,35 @@ class AuthRepositoryImpl(
      * @param password User's password
      * @return Result containing the logged-in user on success or error message on failure
      */
-    override suspend fun login(username: String, password: String): Result<User> = withContext(Dispatchers.IO) {
-        try {
-            val loginRequest = LoginRequest(username = username, password = password)
-            val response = authApiService.login(loginRequest)
-            
-            if (response.isSuccessful) {
-                val loginResponse = response.body() ?: return@withContext Result.failure(IOException("Empty response body"))
-                
-                // Save auth token and user info to preferences
-                saveAuthToken(loginResponse.token)
-                saveCurrentUser(loginResponse.user)
-                
-                Result.success(loginResponse.user)
-            } else {
-                // Handle HTTP error
-                val errorMsg = when (response.code()) {
-                    401 -> "Invalid credentials"
-                    404 -> "User not found"
-                    else -> "Login failed: ${response.message()}"
+    override suspend fun login(username: String, password: String): Result<User> =
+        withContext(Dispatchers.IO) {
+            try {
+                val loginRequest = LoginRequest(username = username, password = password)
+                val response = authApiService.login(loginRequest)
+
+                if (response.isSuccessful) {
+                    val loginResponse = response.body() ?: return@withContext Result.failure(
+                        IOException("Empty response body")
+                    )
+
+                    // Save auth token and user info to preferences
+                    saveAuthToken(loginResponse.token)
+                    saveCurrentUser(loginResponse.user)
+
+                    Result.success(loginResponse.user)
+                } else {
+                    // Handle HTTP error
+                    val errorMsg = when (response.code()) {
+                        401 -> "Invalid credentials"
+                        404 -> "User not found"
+                        else -> "Login failed: ${response.message()}"
+                    }
+                    Result.failure(IOException(errorMsg))
                 }
-                Result.failure(IOException(errorMsg))
+            } catch (e: Exception) {
+                Result.failure(IOException("Network or server error: ${e.localizedMessage}", e))
             }
-        } catch (e: Exception) {
-            Result.failure(IOException("Network or server error: ${e.localizedMessage}", e))
         }
-    }
 
     /**
      * Registers a new user with enhanced error handling
@@ -79,20 +83,22 @@ class AuthRepositoryImpl(
                 username = username,
                 fullName = fullName,
                 phoneNumber = phoneNumber,
-                email = email,
+                email = email.toString(),
                 password = password,
                 profileImageBase64 = profileImageBase64
             )
-            
+
             val response = authApiService.register(registerRequest)
-            
+
             if (response.isSuccessful) {
-                val registerResponse = response.body() ?: return@withContext Result.failure(IOException("Empty response body"))
-                
+                val registerResponse = response.body() ?: return@withContext Result.failure(
+                    IOException("Empty response body")
+                )
+
                 // Save auth token and user info to preferences
                 saveAuthToken(registerResponse.token)
                 saveCurrentUser(registerResponse.user)
-                
+
                 Result.success(registerResponse.user)
             } else {
                 // Handle HTTP error
@@ -110,7 +116,7 @@ class AuthRepositoryImpl(
 
     /**
      * Enhanced logout with result tracking
-     * 
+     *
      * @return Result indicating success or failure of the logout operation
      */
     suspend fun logoutWithResult(): Result<Unit> = withContext(Dispatchers.IO) {

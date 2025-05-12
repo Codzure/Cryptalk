@@ -3,13 +3,12 @@ package com.codzure.cryptalk.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codzure.cryptalk.api.ChatRepository
-import com.codzure.cryptalk.api.ConversationResponse
+import com.codzure.cryptalk.data.ConversationResponse
 import com.codzure.cryptalk.data.User
 import com.codzure.cryptalk.models.ConversationUI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -19,39 +18,39 @@ import kotlinx.coroutines.launch
 class ChatsListViewModel(
     private val repository: ChatRepository
 ) : ViewModel() {
-    
+
     // UI State
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-    
+
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
-    
+
     // Conversations data
     private val _conversations = MutableStateFlow<List<ConversationUI>>(emptyList())
     val conversations: StateFlow<List<ConversationUI>> = _conversations.asStateFlow()
-    
+
     // Raw conversation responses
     private val _rawConversations = MutableStateFlow<List<ConversationResponse>>(emptyList())
-    
+
     init {
         loadConversations()
     }
-    
+
     /**
      * Load conversations from repository
      */
     fun loadConversations() {
         viewModelScope.launch {
             _isLoading.value = true
-            
+
             try {
                 val result = repository.getConversations()
-                
+
                 if (result.isSuccess) {
                     val conversationsList = result.getOrNull() ?: emptyList()
                     _rawConversations.value = conversationsList
-                    
+
                     // Transform API conversations to UI models
                     _conversations.value = conversationsList.map { convResponse ->
                         ConversationUI(
@@ -65,7 +64,8 @@ class ChatsListViewModel(
                         )
                     }
                 } else {
-                    _error.value = "Failed to load conversations: ${result.exceptionOrNull()?.message}"
+                    _error.value =
+                        "Failed to load conversations: ${result.exceptionOrNull()?.message}"
                 }
             } catch (e: Exception) {
                 _error.value = "Failed to load conversations: ${e.message}"
@@ -74,22 +74,23 @@ class ChatsListViewModel(
             }
         }
     }
-    
+
     /**
      * Create a new conversation with a user
      */
     fun createConversation(userId: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            
+
             try {
                 val result = repository.createConversation(userId)
-                
+
                 if (result.isSuccess) {
                     // Refresh conversations list
                     loadConversations()
                 } else {
-                    _error.value = "Failed to create conversation: ${result.exceptionOrNull()?.message}"
+                    _error.value =
+                        "Failed to create conversation: ${result.exceptionOrNull()?.message}"
                     _isLoading.value = false
                 }
             } catch (e: Exception) {
@@ -98,17 +99,17 @@ class ChatsListViewModel(
             }
         }
     }
-    
+
     /**
      * Search for users to start a conversation with
      */
     fun searchUsers(query: String, onResult: (List<User>) -> Unit) {
         if (query.length < 3) return // Don't search for very short queries
-        
+
         viewModelScope.launch {
             try {
                 val result = repository.searchUsers(query)
-                
+
                 if (result.isSuccess) {
                     val users = result.getOrNull() ?: emptyList()
                     onResult(users)
@@ -120,7 +121,7 @@ class ChatsListViewModel(
             }
         }
     }
-    
+
     /**
      * Calculate the number of unread messages for a conversation
      */
@@ -137,14 +138,14 @@ class ChatsListViewModel(
             0
         }
     }
-    
+
     /**
      * Get a conversation response by ID
      */
     fun getConversationById(id: String): ConversationResponse? {
         return _rawConversations.value.find { it.conversation.id == id }
     }
-    
+
     /**
      * Clear any error message
      */

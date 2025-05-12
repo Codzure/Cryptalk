@@ -112,7 +112,9 @@ class ChatViewModel(
                         )
                         
                         // Load the conversation
-                        loadConversation(conversation.conversation.id, tempUser)
+                        // Get the conversation ID from the response
+                        val conversationId = conversation.conversation.id
+                        loadConversation(conversationId, tempUser)
                     } else {
                         _error.value = "Failed to create conversation"
                         _isLoading.value = false

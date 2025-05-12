@@ -1,6 +1,6 @@
 package com.codzure.cryptalk.di
 
-import com.codzure.cryptalk.api.AuthApiService
+import com.codzure.cryptalk.api.ApiService
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -44,7 +44,7 @@ val networkModule: Module = module {
         val json = get<Json>()
         
         Retrofit.Builder()
-            .baseUrl("https://api.cryptalk.com/") // Replace with your actual API base URL
+            .baseUrl("http://localhost:5001/")
             .client(get<OkHttpClient>())
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
@@ -52,6 +52,6 @@ val networkModule: Module = module {
     
     // Provide API service
     single {
-        get<Retrofit>().create(AuthApiService::class.java)
+        get<Retrofit>().create(ApiService::class.java)
     }
 }

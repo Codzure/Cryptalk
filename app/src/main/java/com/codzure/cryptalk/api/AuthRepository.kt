@@ -2,6 +2,9 @@ package com.codzure.cryptalk.api
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.codzure.cryptalk.data.AuthResponse
+import com.codzure.cryptalk.data.LoginRequest
+import com.codzure.cryptalk.data.RegisterRequest
 import com.codzure.cryptalk.data.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -14,7 +17,7 @@ import java.io.IOException
  * Repository for handling authentication operations through the API.
  */
 open class AuthRepository(
-    private val authApiService: AuthApiService,
+    internal val authApiService: ApiService,
     private val context: Context
 ) {
     companion object {
@@ -23,7 +26,8 @@ open class AuthRepository(
         private const val KEY_CURRENT_USER = "current_user"
     }
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val json = Json { ignoreUnknownKeys = true }
 
     /**
@@ -49,7 +53,7 @@ open class AuthRepository(
                 username = username,
                 fullName = fullName,
                 phoneNumber = phoneNumber,
-                email = email,
+                email = email.toString(),
                 password = password,
                 profileImageBase64 = profileImageBase64
             )
@@ -70,17 +74,18 @@ open class AuthRepository(
      * @param password User's password
      * @return Result containing the authenticated user on success or error message on failure
      */
-    open suspend fun login(username: String, password: String): Result<User> = withContext(Dispatchers.IO) {
-        try {
-            val loginRequest = LoginRequest(username, password)
-            val response = authApiService.login(loginRequest)
-            return@withContext handleAuthResponse(response)
-        } catch (e: IOException) {
-            Result.failure(Exception("Network error. Please check your connection."))
-        } catch (e: Exception) {
-            Result.failure(e)
+    open suspend fun login(username: String, password: String): Result<User> =
+        withContext(Dispatchers.IO) {
+            try {
+                val loginRequest = LoginRequest(username, password)
+                val response = authApiService.login(loginRequest)
+                return@withContext handleAuthResponse(response)
+            } catch (e: IOException) {
+                Result.failure(Exception("Network error. Please check your connection."))
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
         }
-    }
 
     /**
      * Logs out the current user by clearing saved credentials.
