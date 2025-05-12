@@ -44,7 +44,7 @@ val networkModule: Module = module {
         val json = get<Json>()
         
         Retrofit.Builder()
-            .baseUrl("http://localhost:5001/")
+            .baseUrl("http://192.168.251.95:5001/")
             .client(get<OkHttpClient>())
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()

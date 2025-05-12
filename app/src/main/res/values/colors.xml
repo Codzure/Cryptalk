@@ -1,24 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="text_light">#FFFFFF</color>
-    <color name="switch_track">#424242</color>
-    <color name="switch_thumb">#9C27B0</color>
-    <color name="purple_light">#BA68C8</color>
-    <color name="background_dark">#121212</color>
-    <color name="background_light">#F5F5F5</color>
+    <!-- Authentication colors for Cryptalk -->
+    <color name="auth_primary">#1E3A8A</color>         <!-- Deep Blue: Trust & Security -->
+    <color name="auth_primary_dark">#162A6A</color>    <!-- Darker variant of primary -->
+    <color name="auth_accent">#0D9488</color>          <!-- Teal: Modern, tech-focused -->
+    <color name="auth_text_primary">#0F172A</color>    <!-- Dark Gray-Blue: Good contrast on light bg -->
+    <color name="auth_text_secondary">#64748B</color>  <!-- Muted Blue-Gray for secondary text -->
+    <color name="auth_success">#22C55E</color>         <!-- Modern green for success -->
+    <color name="auth_warning">#F59E0B</color>         <!-- Warm amber for warnings -->
 
-    <color name="error_red">#F44336</color>
-    <color name="error_container">#FFEBEE</color>
-    <color name="brand_main_text">#221f1f</color>
-    <color name="bubble_self_background">#DCF8C6</color>
-    <color name="bubble_self_background_2">#E1F5FE</color>
-
-    <!-- Authentication colors -->
-    <color name="auth_primary">#5E35B1</color>
-    <color name="auth_primary_dark">#4527A0</color>
-    <color name="auth_accent">#7B1FA2</color>
-    <color name="auth_text_primary">#212121</color>
-    <color name="auth_text_secondary">#757575</color>
-    <color name="auth_success">#4CAF50</color>
-    <color name="auth_warning">#FFC107</color>
+    <!-- Cleaned up colors -->
+    <color name="text_light">#FFFFFF</color>            <!-- Light text color -->
+    <color name="background_light">#F5F5F5</color>      <!-- Light background color -->
+    <color name="background_dark">#121212</color>       <!-- Dark background color -->
+    <color name="error_red">#F44336</color>             <!-- Error color -->
+    <color name="error_container">#FFEBEE</color>       <!-- Background for error messages -->
+    <color name="bubble_self_background">#DCF8C6</color> <!-- Self bubble background -->
+    <color name="bubble_self_background_2">#E1F5FE</color> <!-- Alternative self bubble background -->
 </resources>
