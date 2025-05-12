@@ -41,7 +41,8 @@ open class AuthRepository(
         fullName: String,
         phoneNumber: String,
         email: String?,
-        password: String
+        password: String,
+        profileImageBase64: String? = null
     ): Result<User> = withContext(Dispatchers.IO) {
         try {
             val registerRequest = RegisterRequest(
@@ -49,7 +50,8 @@ open class AuthRepository(
                 fullName = fullName,
                 phoneNumber = phoneNumber,
                 email = email,
-                password = password
+                password = password,
+                profileImageBase64 = profileImageBase64
             )
 
             val response = authApiService.register(registerRequest)

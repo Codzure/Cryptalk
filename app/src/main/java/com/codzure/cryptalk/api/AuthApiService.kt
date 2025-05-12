@@ -39,7 +39,8 @@ data class RegisterRequest(
     val fullName: String,
     val email: String? = null,
     val phoneNumber: String,
-    val password: String
+    val password: String,
+    val profileImageBase64: String? = null  // Base64 encoded image data
 )
 
 /**

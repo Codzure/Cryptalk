@@ -57,7 +57,8 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
         fullName: String,
         phoneNumber: String,
         email: String?,
-        password: String
+        password: String,
+        profileImageBase64: String? = null
     ) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
@@ -67,7 +68,8 @@ class AuthViewModel(private val authRepository: AuthRepository) : ViewModel() {
                 fullName = fullName,
                 phoneNumber = phoneNumber,
                 email = email,
-                password = password
+                password = password,
+                profileImageBase64 = profileImageBase64
             )
             
             if (result.isSuccess) {

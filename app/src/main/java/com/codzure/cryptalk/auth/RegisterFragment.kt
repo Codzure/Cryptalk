@@ -1,16 +1,26 @@
 package com.codzure.cryptalk.auth
 
+import android.app.Activity
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
+import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.codzure.cryptalk.R
 import com.codzure.cryptalk.databinding.FragmentRegisterBinding
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 
 class RegisterFragment : Fragment() {
 
@@ -18,6 +28,28 @@ class RegisterFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: AuthViewModel by viewModel()
+    
+    // Variable to store the selected profile image as Base64 string
+    private var profileImageBase64: String? = null
+    
+    // Activity result launcher for image selection
+    private val imagePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                try {
+                    // Update the ImageView with the selected image
+                    binding.profileImage.setImageURI(uri)
+                    
+                    // Convert the image to Base64
+                    profileImageBase64 = convertImageToBase64(uri)
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "Failed to load image: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -41,6 +73,16 @@ class RegisterFragment : Fragment() {
         binding.tvLogin.setOnClickListener {
             findNavController().popBackStack()
         }
+        
+        // Set up image selection button
+        binding.btnSelectImage.setOnClickListener {
+            openImagePicker()
+        }
+        
+        // Allow clicking on the profile image to select a new image
+        binding.profileImage.setOnClickListener {
+            openImagePicker()
+        }
 
         // Register button click
         binding.btnRegister.setOnClickListener {
@@ -50,7 +92,7 @@ class RegisterFragment : Fragment() {
                 val email = binding.etEmail.text.toString().trim().ifBlank { null }
                 val password = binding.etPassword.text.toString()
 
-                viewModel.register(fullName, phoneNumber, email, password)
+                viewModel.register(fullName, phoneNumber, email, password, profileImageBase64)
                 
                 // Show loading state
                 binding.btnRegister.isEnabled = false
@@ -161,6 +203,52 @@ class RegisterFragment : Fragment() {
         return phoneNumber.trim().matches(Regex("\\d{10,12}"))
     }
 
+    /**
+     * Opens the image picker to select a profile image
+     */
+    private fun openImagePicker() {
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        intent.type = "image/*"
+        imagePickerLauncher.launch(intent)
+    }
+    
+    /**
+     * Converts an image URI to a Base64 encoded string
+     */
+    private fun convertImageToBase64(uri: Uri): String {
+        val inputStream: InputStream = requireContext().contentResolver.openInputStream(uri) ?: return ""
+        
+        // Decode the image maintaining aspect ratio but limit size
+        val options = BitmapFactory.Options().apply {
+            inJustDecodeBounds = true
+        }
+        BitmapFactory.decodeStream(inputStream, null, options)
+        inputStream.close()
+        
+        // Calculate sample size to resize image to reasonable dimensions
+        val maxDimension = 512 // Max width or height
+        var sampleSize = 1
+        if (options.outHeight > maxDimension || options.outWidth > maxDimension) {
+            val heightRatio = Math.round(options.outHeight.toFloat() / maxDimension.toFloat())
+            val widthRatio = Math.round(options.outWidth.toFloat() / maxDimension.toFloat())
+            sampleSize = Math.max(heightRatio, widthRatio)
+        }
+        
+        // Decode with the sample size
+        val newInputStream = requireContext().contentResolver.openInputStream(uri) ?: return ""
+        val decodingOptions = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize
+        }
+        val bitmap = BitmapFactory.decodeStream(newInputStream, null, decodingOptions)
+        newInputStream.close()
+        
+        // Convert to Base64
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap?.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
+    }
+    
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
