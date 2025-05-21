@@ -25,7 +25,7 @@ A secure messaging application built with modern Android development practices.
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/Cryptalk.git
+   git clone [https://github.com/yourusername/Cryptalk.git](https://github.com/Codzure/Cryptalk.git)
    ```
 2. Open the project in Android Studio
 3. Sync project with Gradle files
@@ -81,7 +81,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Maintainers
 
-- [Your Name](https://github.com/yourusername)
+- [Leonard Mutugi]([https://github.com/yourusername](https://github.com/Codzure))
 
 ## Acknowledgments
 
