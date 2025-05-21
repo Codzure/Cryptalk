@@ -1,6 +1,6 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <gradient
-        android:startColor="@color/switch_thumb"
+        android:startColor="@color/auth_text_primary"
         android:endColor="#3F51B5"
         android:type="radial"
     android:gradientRadius="60dp" />

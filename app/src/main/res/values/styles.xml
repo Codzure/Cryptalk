@@ -7,7 +7,7 @@
         <item name="android:fitsSystemWindows">false</item>
         <!-- Stroke and Hint Colors -->
         <item name="boxStrokeColor">@color/message_input_colors</item>
-        <item name="hintTextColor">@color/purple_light</item>
+        <item name="hintTextColor">@color/auth_warning</item>
 
         <!-- Rounded Corners -->
         <item name="shapeAppearanceOverlay">@style/ChatInputShape</item>
@@ -24,7 +24,7 @@
     </style>
 
     <style name="GenZ.HintText" parent="TextAppearance.Material3.LabelSmall">
-        <item name="android:textColor">@color/switch_thumb</item>
+        <item name="android:textColor">@color/auth_warning</item>
         <item name="android:textSize">12sp</item>
     </style>
 
@@ -33,11 +33,23 @@
         <item name="android:textSize">16dp</item>
         <item name="fontFamily">sans-serif-medium</item>
         <item name="fontStyle">italic</item>
-        <item name="android:textColor">@color/brand_main_text</item>
+        <item name="android:textColor">@color/background_dark</item>
         <item name="android:layout_gravity">center</item>
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textAppearance">?attr/textAppearanceHeadline6</item>
+    </style>
+    
+    <!-- Toolbar Subtitle -->
+    <style name="ToolbarSubtitleTextAppearance">
+        <item name="android:textSize">12dp</item>
+        <item name="fontFamily">sans-serif</item>
+        <item name="android:textColor">@color/background_dark</item>
+        <item name="android:alpha">0.7</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?attr/textAppearanceSubtitle2</item>
     </style>
 
     <style name="DialogSlideAnim" parent="Theme.Material3.DayNight.Dialog">
@@ -49,7 +61,7 @@
         <item name="android:layout_width">75dp</item>  <!--initial was 0dp-->
         <item name="android:layout_height">60dp</item>
         <item name="android:textSize">20sp</item>
-        <item name="android:textColor">@color/brand_main_text</item>
+        <item name="android:textColor">@color/background_dark</item>
         <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
         <item name="android:layout_columnWeight">1</item>
     </style>

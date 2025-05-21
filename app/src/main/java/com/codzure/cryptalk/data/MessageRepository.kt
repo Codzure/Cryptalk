@@ -1,5 +1,6 @@
 package com.codzure.cryptalk.data
 
+import android.util.Log
 import com.codzure.cryptalk.extensions.AESAlgorithm
 import com.codzure.cryptalk.models.ConversationUI
 import com.codzure.cryptalk.utils.DataUtils
@@ -8,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import java.security.MessageDigest
 import java.util.UUID
 
 /**
@@ -124,7 +126,9 @@ class MessageRepositoryImpl : MessageRepository {
             encodedText = messageText,
             pinHash = if (encrypt && pin != null) generatePinHash(pin) else null,
             timestamp = System.currentTimeMillis(),
-            isRead = false
+            isRead = false,
+            text = text, // Original plain text message
+            isDelivered = true // Mark as delivered since it's a local message
         )
         
         // Add the message to our collection
@@ -166,7 +170,7 @@ class MessageRepositoryImpl : MessageRepository {
                 AESAlgorithm.AES.encrypt(replyText, pin)
             } catch (e: Exception) {
                 // If encryption fails, use plain text but log the error
-                android.util.Log.e("Cryptalk", "Failed to encrypt auto-reply: ${e.message}")
+                Log.e("Cryptalk", "Failed to encrypt auto-reply: ${e.message}")
                 replyText
             }
         } else {
@@ -182,7 +186,9 @@ class MessageRepositoryImpl : MessageRepository {
             encodedText = encryptedReplyText,
             pinHash = if (encrypt && pin != null) generatePinHash(pin) else null,
             timestamp = System.currentTimeMillis(),
-            isRead = true
+            isRead = true,
+            text = replyText, // Original plain text reply
+            isDelivered = true // Auto-replies are always delivered
         )
         
         // Add reply to messages
@@ -224,13 +230,13 @@ class MessageRepositoryImpl : MessageRepository {
             
             try {
                 // Use AESAlgorithm to decrypt the message
-                return AESAlgorithm.AES.decrypt(message.encodedText, pin)
+                return AESAlgorithm.AES.decrypt(message.encodedText.toString(), pin)
             } catch (e: Exception) {
                 throw SecurityException("Decryption failed: ${e.message}")
             }
         } else {
             // Message isn't encrypted
-            return message.encodedText
+            return message.encodedText.toString()
         }
     }
     
@@ -260,7 +266,7 @@ class MessageRepositoryImpl : MessageRepository {
     
     private fun generatePinHash(pin: String): String {
         try {
-            val digest = java.security.MessageDigest.getInstance("SHA-256")
+            val digest = MessageDigest.getInstance("SHA-256")
             val hash = digest.digest(pin.toByteArray())
             return hash.joinToString("") { "%02x".format(it) }
         } catch (e: Exception) {

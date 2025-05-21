@@ -29,14 +29,16 @@ import com.codzure.cryptalk.data.Message
 import com.codzure.cryptalk.databinding.FragmentChatBinding
 import com.codzure.cryptalk.dialogs.PinInputDialogFragment
 import com.codzure.cryptalk.dialogs.PinMode
-import com.codzure.cryptalk.extensions.hideKeyboard
-import com.codzure.cryptalk.utils.DataUtils
+// Use a specific import to avoid ambiguity
+import com.codzure.cryptalk.extensions.hideKeyboard as hideKeyboardExt
 import com.codzure.cryptalk.viewmodels.ChatViewModel
+import com.codzure.cryptalk.viewmodels.ChatsListViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.MaterialContainerTransform
 import com.google.android.material.transition.MaterialSharedAxis
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
@@ -47,9 +49,11 @@ class ChatFragment : Fragment() {
     private lateinit var adapter: MessageAdapter
     private val args: ChatFragmentArgs by navArgs()
     private var globalLayoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
+    private var isPolling = false
     
-    // Inject ViewModel with Koin
+    // Inject ViewModels with Koin
     private val viewModel: ChatViewModel by viewModel()
+    private val chatsListViewModel: ChatsListViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,6 +68,8 @@ class ChatFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Make sure we rebuild the binding to include the swipeRefresh
+        // This ensures the latest layout changes are reflected in the binding class
         _binding = FragmentChatBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -76,19 +82,54 @@ class ChatFragment : Fragment() {
         setupKeyboardVisibilityListener()
         observeViewModel()
         
-        // Load conversation for this recipient
-        viewModel.loadConversation(args.userId)
+        // Load conversation based on parameters
+        val conversationId = args.conversationId
+        
+        // Try to get conversation from ChatsListViewModel
+        val conversationResponse = chatsListViewModel.getConversationById(conversationId)
+        
+        if (conversationResponse != null) {
+            // Load conversation with participant details
+            viewModel.loadConversation(conversationId, conversationResponse.participant)
+        } else if (args.userId != null && args.senderName != null) {
+            // Legacy fallback - try to load by user ID
+            showErrorSnackbar("Using legacy conversation loading...")
+            viewModel.createConversationByUserId(args.userId!!, args.senderName!!)
+        } else {
+            // No valid parameters to load conversation
+            showErrorSnackbar("Conversation not found. Please go back and try again.")
+            findNavController().navigateUp()
+        }
 
         // Handle window insets for status bar
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
-            Log.d("ChatFragment", "Status bar top: ${systemBars.top}")
             insets
         }
 
         binding.toolbar.setNavigationOnClickListener {
             findNavController().navigateUp()
+        }
+        
+        // Add swipe refresh for messages
+        binding.swipeRefresh.setOnRefreshListener {
+            viewModel.refreshMessages()
+        }
+        
+        // Start message polling
+        startMessagePolling()
+    }
+    
+    private fun startMessagePolling() {
+        if (isPolling) return
+        isPolling = true
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            while (isPolling && isAdded) {
+                delay(POLLING_INTERVAL)
+                viewModel.refreshMessages(silent = true)
+            }
         }
     }
     
@@ -97,6 +138,9 @@ class ChatFragment : Fragment() {
             // Observe loading state
             viewModel.isLoading.collect { isLoading ->
                 binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+                if (!isLoading) {
+                    binding.swipeRefresh.isRefreshing = false
+                }
             }
         }
         
@@ -115,7 +159,37 @@ class ChatFragment : Fragment() {
             // Observe recipient
             viewModel.recipient.collect { user ->
                 user?.let {
-                    binding.toolbarTitle.text = it.fullName ?: args.senderName
+                    binding.toolbarTitle.text = it.fullName
+                    binding.toolbarSubtitle.text = it.phoneNumber
+                    binding.toolbarSubtitle.visibility = View.VISIBLE
+                }
+            }
+        }
+        
+        viewLifecycleOwner.lifecycleScope.launch {
+            // Observe message sending state
+            viewModel.messageSendingState.collect { state ->
+                when(state) {
+                    ChatViewModel.MessageSendState.SENDING -> {
+                        binding.sendButton.isEnabled = false
+                        binding.encryptionToggle.isEnabled = false
+                        binding.sendProgressIndicator.visibility = View.VISIBLE
+                    }
+                    ChatViewModel.MessageSendState.SUCCESS -> {
+                        binding.sendButton.isEnabled = true
+                        binding.encryptionToggle.isEnabled = true
+                        binding.sendProgressIndicator.visibility = View.GONE
+                    }
+                    ChatViewModel.MessageSendState.ERROR -> {
+                        binding.sendButton.isEnabled = true
+                        binding.encryptionToggle.isEnabled = true
+                        binding.sendProgressIndicator.visibility = View.GONE
+                    }
+                    else -> {
+                        binding.sendButton.isEnabled = true
+                        binding.encryptionToggle.isEnabled = true
+                        binding.sendProgressIndicator.visibility = View.GONE
+                    }
                 }
             }
         }
@@ -132,19 +206,23 @@ class ChatFragment : Fragment() {
     }
 
     private fun setupToolbar() {
-        binding.toolbarTitle.text = args.senderName
+        binding.toolbarTitle.text = args.senderName ?: "Chat"
     }
 
     private fun setupRecyclerView() {
         adapter = MessageAdapter(
             emptyList(),
-            DataUtils.currentUser.id
+            viewModel.getCurrentUserId()
         ) { message, itemView ->
             if (message.pinHash != null) {
                 showPinDialog(PinMode.DECRYPT) { inputPin ->
-                    viewModel.decryptMessage(message, inputPin) { decryptedText ->
-                        animateDecryption(itemView)
-                        showDecryptedDialog(decryptedText)
+                    viewModel.decryptMessage(message, inputPin) { decryptedText, success ->
+                        if (success) {
+                            animateDecryption(itemView)
+                            showDecryptedDialog(decryptedText ?: "Unable to decrypt message")
+                        } else {
+                            showErrorSnackbar("Incorrect PIN or message cannot be decrypted")
+                        }
                     }
                 }
             }
@@ -183,7 +261,7 @@ class ChatFragment : Fragment() {
         binding.apply {
             sendButton.setOnClickListener {
                 sendPlainMessage()
-                hideKeyboard()
+                hideKeyboardExt()
             }
 
             encryptionToggle.setOnClickListener {
@@ -212,10 +290,6 @@ class ChatFragment : Fragment() {
                 if (hasFocus && adapter.itemCount > 0) {
                     messageList.post {
                         messageList.smoothScrollToPosition(adapter.itemCount - 1)
-                        Log.d(
-                            "ChatFragment",
-                            "Scrolled RecyclerView to position: ${adapter.itemCount - 1}"
-                        )
                     }
                 }
             }
@@ -280,11 +354,12 @@ class ChatFragment : Fragment() {
             .setMessage("Would you like to encrypt this message with a 4-digit PIN?")
             .setPositiveButton("Encrypt") { _, _ ->
                 showPinDialog(PinMode.ENCRYPT) { pin ->
-                    viewModel.sendMessage(messageText, true, pin)
+                    viewModel.sendMessage(messageText, pin)
                     binding.messageInput.text?.clear()
-                    hideKeyboard()
+                    hideKeyboardExt()
                 }
             }
+            .setNegativeButton("Cancel", null)
             .show()
     }
 
@@ -343,14 +418,15 @@ class ChatFragment : Fragment() {
         globalLayoutListener?.let {
             binding.root.viewTreeObserver.removeOnGlobalLayoutListener(it)
         }
+        isPolling = false
         _binding = null
         super.onDestroyView()
     }
 
     companion object {
         private const val MIN_KEYBOARD_HEIGHT_RATIO = 0.15
-        private const val ANIMATION_DURATION_SHORT = 300L
-        private const val ANIMATION_DURATION_MEDIUM = 500L
-        private const val TAG = "ChatFragment"
+        private const val ANIMATION_DURATION_SHORT = 200L
+        private const val ANIMATION_DURATION_MEDIUM = 400L
+        private const val POLLING_INTERVAL = 5000L // 5 seconds
     }
 }

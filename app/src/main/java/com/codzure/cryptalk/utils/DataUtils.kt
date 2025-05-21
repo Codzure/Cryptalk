@@ -99,7 +99,9 @@ object DataUtils {
                     encodedText = generateMessageText(isOutgoing, i),
                     pinHash = if (i % 5 == 0) "hashed_pin_${messageId.takeLast(6)}" else null,
                     timestamp = System.currentTimeMillis() - (60000 * (messageCount - i)),
-                    isRead = i < messageCount - 1 // Only most recent might be unread
+                    isRead = i < messageCount - 1,
+                    text = generateMessageText(isOutgoing, i), // Same as encodedText for dummy data
+                    isDelivered = i < messageCount - 1 // All messages except the most recent are delivered
                 )
                 messages.add(message)
             }

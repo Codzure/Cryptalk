@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.transition)
     implementation(libs.androidx.splashscreen)
+    implementation(libs.androidx.swiperefreshlayout)
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.activity)
@@ -64,7 +65,11 @@ dependencies {
     // Kotlin Serialization
     implementation(libs.kotlinx.serialization.json)
     
-    // Removed Supabase dependencies
+    // Network dependencies
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
     
     implementation(libs.koin)
     implementation(libs.lifecycle.common)

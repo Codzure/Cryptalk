@@ -1,0 +1,48 @@
+version: 2
+updates:
+  # Enable version updates for Gradle
+  - package-ecosystem: "gradle"
+    # Look for `build.gradle` and `settings.gradle` in the `root` directory
+    directory: "/"
+    # Check for updates once a week
+    schedule:
+      interval: "weekly"
+      # The time of day to check for updates, in UTC
+      time: "09:00"
+      # Check for any updates from the previous day
+      timezone: "UTC"
+    # Assign PRs to the `@dependabot` user
+    assignees:
+      - "dependabot"
+    # Auto-merge minor and patch updates
+    labels:
+      - "dependencies"
+    # Increase the version requirements for updates
+    # only when required
+    versioning-strategy: increase-if-necessary
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      time: "10:00"
+      timezone: "UTC"
+    assignees:
+      - "dependabot"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Enable version updates for Maven
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      time: "11:00"
+      timezone: "UTC"
+    assignees:
+      - "dependabot"
+    labels:
+      - "dependencies"
+    versioning-strategy: increase-if-necessary

@@ -3,21 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/gradient_background">
+    android:layout_height="match_parent">
 
     <ImageView
         android:id="@+id/iv_logo"
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:contentDescription="Cryptalk Logo"
-        android:src="@drawable/ic_launcher_foreground"
-        android:tint="@android:color/white"
+        android:src="@drawable/cryptalk"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.4" />
+        app:layout_constraintVertical_bias="0.397" />
 
     <TextView
         android:id="@+id/tv_app_name"
@@ -38,7 +37,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="Secure messaging for everyone"
-        android:textColor="#E0E0E0"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -49,7 +47,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        android:indeterminateTint="@android:color/white"
+        android:indeterminateTint="@color/auth_primary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_app_tagline" />
