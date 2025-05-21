@@ -4,7 +4,7 @@
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>  <!-- Android emulator -->
-        <domain includeSubdomains="true"></domain>  <!-- Local Machine -->
+        <domain includeSubdomains="true">192.168.251.95</domain>  <!-- Local Machine -->
         <!-- Add your development server IP if needed -->
     </domain-config>
 </network-security-config>
